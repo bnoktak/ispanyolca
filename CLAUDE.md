@@ -12,7 +12,8 @@ Ayrıntılı kararlar `PLAN.md` içinde, telefona taşıma planı `TELEFON_PLANI
 
 ## Mimari
 - Derleme adımı yok: düz HTML/CSS/JS, **klasik `<script>` etiketleri** (modül değil). Bilgisayarda `index.html` çift tıklanıp `file://` ile de çalışmalı; bu özellik bozulmamalı.
-- Global nesneler: `ICERIK` (içerik), `Depo` (kayıt), `Tekrar` (aralıklı tekrar), `Ses` (sesli okuma), `Alistirma` (soru türleri), `Puan` (1-2-3 zorluk günlüğü).
+- Global nesneler: `ICERIK` (içerik), `Depo` (kayıt), `Tekrar` (aralıklı tekrar), `Ses` (sesli okuma), `Alistirma` (soru türleri), `Puan` (1-2-3 zorluk günlüğü), `Cihaz` (yalnızca bu cihazın ayarları: telefon modu vb.; ilerlemeye/senkrona girmez).
+- 📱 Telefon modu (`Cihaz.telefon()`, `<body class="telefon">`): yazma soruları `Alistirma.yazVeya` / `ceviriVeya` / `yazModu` ile çoğunlukla şıklara, 🔤 harflerden kur (`harf_kur`) ve 🧱 kelimelerden kur (`ceviri_kur`) türlerine döner; ~%20'si yazma kalır. Yeni bir yazma sorusu eklenirse bu dönüşüme de bağlanmalı.
 - Yeni bir dosya eklenirse `index.html` içindeki script sırasına **ve `sw.js` içindeki `DOSYALAR` listesine** eklenmeli (`node denetim.js` eksikleri bildirir).
 
 ```

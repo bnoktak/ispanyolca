@@ -180,6 +180,34 @@
   // çeviri sorusuna uygun cümle: diyalog değil, en fazla 7 kelime
   const KISA_CUMLE = (c) => !c.es.includes('—') && c.es.split(' ').length <= 7;
 
+  /* ---------- 📱 Telefon modu ----------
+     Telefonda yazma soruları çoğunlukla dokunarak cevaplanan türlere dönüşür; yaklaşık %20'si yazma kalır. */
+  const YAZMA_ORANI = 0.2;
+  const telefon = () => !!(window.Cihaz && Cihaz.telefon());
+  const yazmaKalsin = () => !telefon() || Math.random() < YAZMA_ORANI;
+  // Asıl olasılığı p olan yazma modu (çekim gibi): telefonda ayrıca %20 süzgecinden geçer
+  const yazModu = (p) => Math.random() < p && yazmaKalsin();
+
+  /* ---------- 🔤 Harflerden kur ----------
+     'el padre' → artikel hazır verilir, 'padre' harflerden kurulur. Tek kelime, 2–12 harf. */
+  function harfHedef(k) {
+    if (k.yazma === false) return null;
+    const ilk = alternatifler(k.es)[0];
+    const m = /^(el|la|los|las|un|una) (.+)$/.exec(ilk);
+    const onEk = m ? m[1] : '', hedef = (m ? m[2] : ilk).trim();
+    if (/[\s.,;:¿?¡!]/.test(hedef) || hedef.length < 2 || hedef.length > 12) return null;
+    return { onEk, hedef };
+  }
+  // İspanyolcada karıştırılan harfler: yanıltıcı taş olarak kullanılır
+  const HARF_KARISAN = { b: ['v'], v: ['b'], c: ['s', 'z'], s: ['c', 'z'], z: ['s', 'c'], y: ['l', 'i'], l: ['y'], i: ['y', 'í'], g: ['j'], j: ['g', 'h'],
+    h: ['j'], n: ['ñ'], 'ñ': ['n'], q: ['k'], k: ['q', 'c'], a: ['á'], e: ['é'], o: ['ó'], u: ['ú'], 'á': ['a'], 'é': ['e'], 'í': ['i'], 'ó': ['o'], 'ú': ['u'] };
+  function harfCeldiriciler(hedef, adet) {
+    const harfler = Array.from(hedef.toLowerCase());
+    let aday = karistir([...new Set(harfler.flatMap((h) => HARF_KARISAN[h] || []))]);
+    if (aday.length < adet) aday = aday.concat(karistir(['a', 'e', 'o', 's', 'r', 'n', 'l', 'd']).filter((h) => !aday.includes(h)));
+    return aday.slice(0, adet);
+  }
+
   /* ---------- Sayılar ve rakam soruları ---------- */
   const BIRLER = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince',
     'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'];
@@ -326,6 +354,59 @@
           });
         }
       };
+    },
+
+    /* 🔤 Harflerden kur (telefon modu): Türkçesi verilir, İspanyolcası karışık harf taşlarından kurulur.
+       Taşlarda 2 yanıltıcı harf olur (b/v, c/s/z, aksanlı/aksansız…). Artikel hazır verilir. */
+    harfUygun(kelime) { return !!harfHedef(kelime); },
+    harfKur(kelime) {
+      const { onEk, hedef } = harfHedef(kelime);
+      return {
+        tur: 'harf_kur', anahtar: kelime.id,
+        render(alan, bitti) {
+          const taslar = karistir([...Array.from(hedef.toLowerCase()), ...harfCeldiriciler(hedef, 2)]).map((m, i) => ({ m, i }));
+          alan.innerHTML = `
+            <p class="yonerge">🔤 Harflerden kur</p>
+            <div class="soru">${esc(kelime.tr)}</div>
+            <div class="harf-satir">${onEk ? `<span class="on-ek es">${esc(onEk)}</span>` : ''}<div class="cevap-satiri harfli"></div></div>
+            <div class="taslar harfler">${taslar.map((t) => `<button type="button" class="tas" data-i="${t.i}">${esc(t.m)}</button>`).join('')}</div>
+            <button type="button" class="ana-buton kontrol" disabled>Kontrol et</button>`;
+          const satir = alan.querySelector('.cevap-satiri'), kontrolB = alan.querySelector('.kontrol');
+          const secilen = [];
+          const ciz = () => {
+            satir.innerHTML = secilen.map((t) => `<button type="button" class="tas yerlesik" data-i="${t.i}">${esc(t.m)}</button>`).join('');
+            alan.querySelectorAll('.taslar .tas').forEach((b) => b.classList.toggle('kullanildi', secilen.some((t) => t.i === +b.dataset.i)));
+            kontrolB.disabled = secilen.length === 0;
+            satir.querySelectorAll('.tas').forEach((b) => b.addEventListener('click', () => {
+              if (kontrolB.dataset.bitti) return;
+              secilen.splice(secilen.findIndex((t) => t.i === +b.dataset.i), 1); ciz();
+            }));
+          };
+          const ekle = (t) => { if (kontrolB.dataset.bitti || !t || secilen.includes(t)) return; secilen.push(t); ciz(); };
+          alan.querySelectorAll('.taslar .tas').forEach((b) => b.addEventListener('click', () => ekle(taslar.find((t) => t.i === +b.dataset.i))));
+          const bitir = () => {
+            if (kontrolB.dataset.bitti || !secilen.length) return; kontrolB.dataset.bitti = '1'; kontrolB.disabled = true;
+            const verilen = (onEk ? onEk + ' ' : '') + secilen.map((t) => t.m).join('');
+            const s = kontrol(verilen, kelime.es, false);
+            satir.classList.add(s.dogru ? 'dogru' : 'yanlis');
+            Tekrar.sonuc(kelime.id, s.dogru);
+            bitti({ dogru: s.dogru, uyari: s.uyari, dogrusu: kelime.es, ipucu: kelime.ipucu, en: kelime.en, oku: kelime.es, soru: kelime.tr, verilen });
+          };
+          kontrolB.addEventListener('click', bitir);
+          // klavyeyle de çalışsın: harfe basınca o taş, ⌫ son taşı geri alır, Enter kontrol eder
+          alan._tus = (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); bitir(); }
+            else if (e.key === 'Backspace') { if (!kontrolB.dataset.bitti && secilen.length) { secilen.pop(); ciz(); } }
+            else if (e.key.length === 1) ekle(taslar.find((t) => t.m === e.key.toLowerCase() && !secilen.includes(t)));
+          };
+        }
+      };
+    },
+    // Telefonda kelime yazma sorusunun yerine geçen soru (sinav: üretim olsun diye önce harf taşları)
+    yazVeya(kelime, sinav) {
+      if (yazmaKalsin()) return this.yaz(kelime);
+      if (harfHedef(kelime) && (sinav || Math.random() < 0.5)) return this.harfKur(kelime);
+      return this.sec(kelime, 'tr');
     },
 
     /* Dinleme: mod 'sec' (duyduğunun anlamını seç) | 'yaz' (duyduğunu yaz) */
@@ -561,18 +642,23 @@
       };
     },
 
-    /* Cümle kurma: karışık kelimeleri doğru sıraya diz */
-    cumle(cumle, tumCumleler, dinleme) {
+    /* Cümle kurma: karışık kelimeleri doğru sıraya diz.
+       secenek.tur: 'ceviri_kur' (telefonda "Türkçe cümle → yaz" yerine), secenek.celdirici: yanıltıcı kelime sayısı */
+    cumle(cumle, tumCumleler, dinleme, secenek = {}) {
       return {
-        tur: 'cumle', anahtar: cumle.es,
+        tur: secenek.tur || 'cumle', anahtar: cumle.es,
         render(alan, bitti) {
           const parcalar = cumle.es.split(' ');
           const digerKelimeler = karistir(tumCumleler.filter((c) => c !== cumle).flatMap((c) => c.es.split(' ')))
             .filter((w) => !parcalar.some((p) => normal(p) === normal(w)));
-          const celdirici = [...new Set(digerKelimeler)].slice(0, 2);
+          // yanıltıcılar aynı biçimde iki kez gelmesin ("Hola" ve "hola,")
+          let celdirici = [...new Map(digerKelimeler.map((w) => [normal(w), w])).values()].slice(0, secenek.celdirici || 2);
+          // kelimelerden kur: yanıltıcılar başka cümlelerden geldiği için noktalaması ve baş harfi ele vermesin ("¿Tienen" → "tienen")
+          if (secenek.tur === 'ceviri_kur') celdirici = celdirici.map((w) => w.replace(/[¿¡?!.,;:"…]/g, '')).filter(Boolean)
+            .map((w) => (/^[A-ZÁÉÍÓÚÑ][a-záéíóúñü]/.test(w) && bilinenMi(normal(w)) ? w[0].toLowerCase() + w.slice(1) : w));   // özel isimler (Ana, Colombia) büyük kalır
           const taslar = karistir([...parcalar, ...celdirici]).map((m, i) => ({ m, i }));
           alan.innerHTML = `
-            <p class="yonerge">${dinleme ? '🎧 Dinle ve cümleyi kur' : 'Cümleyi kur'}</p>
+            <p class="yonerge">${dinleme ? '🎧 Dinle ve cümleyi kur' : secenek.tur === 'ceviri_kur' ? '🧱 Cümleyi kelimelerden kur' : 'Cümleyi kur'}</p>
             ${dinleme
               ? `<div class="dinle-alan"><button type="button" class="dinle-buton" title="Tekrar dinle">🔊</button><button type="button" class="yavas-buton">🐢 yavaş</button></div>`
               : `<div class="soru">${esc(cumle.tr)}</div>`}
@@ -814,6 +900,13 @@
       return ICERIK.uniteler.filter((u) => u.sira <= sinir).flatMap((u) => u.soruCevap || []).concat(unite.ek ? unite.soruCevap || [] : []);
     },
 
+    // Telefonda "Türkçe cümle → İspanyolca yaz" yerine kelime taşlarından kurma (2–3 yanıltıcı kelime)
+    ceviriVeya(cm, havuz) {
+      if (yazmaKalsin()) return this.ceviri(cm);
+      return this.cumle(cm, havuz, false, { tur: 'ceviri_kur', celdirici: Math.random() < 0.5 ? 2 : 3 });
+    },
+    telefon,
+
     // Bir üniteden tek bir alıştırma üret (tür verilmezse rastgele); cevap günlüğü için ünite bilgisi eklenir
     uniteden(unite, tur) { const a = this._uniteden(unite, tur); a.unite = unite.id; return a; },
     _uniteden(unite, tur) {
@@ -824,32 +917,33 @@
       const t = tur && turler.includes(tur) ? tur : rastgele(turler);
       if (t === 'sec_es') return this.sec(this._tek(kel, t), 'es');
       if (t === 'sec_tr') return this.sec(this._tek(kel, t), 'tr');
-      if (t === 'yaz') return this.yaz(this._tek(yazilir, t));
+      if (t === 'yaz') return this.yazVeya(this._tek(yazilir, t));
       if (t === 'eslestir') return this.eslestir(this._taze(kel, 5, t));
       if (t === 'sureli') return this.eslestir(this._taze(kel, 6, t), 40);
       if (t === 'cumle') return this.cumle(this.cumleSec(unite, t), this.cumleHavuzu(unite));
       if (t === 'bosluk') return this.bosluk(this._tek(bos, t));
       if (t === 'dinle_sec') return this.dinle(this._tek(yazilir, t), 'sec');
-      if (t === 'dinle_yaz') return this.dinle(this._tek(yazilir, t), 'yaz');
+      if (t === 'dinle_yaz') return this.dinle(this._tek(yazilir, t), yazmaKalsin() ? 'yaz' : 'sec');
       if (t === 'dinle_cumle') { const havuz = this.cumleHavuzu(unite); return this.dinleCumle(this.cumleSec(unite, t), havuz, havuz.length >= 3 && Math.random() < 0.5 ? 'anlam' : 'kur'); }
       if (t === 'cekim') {
         // birikimli: yarı yarıya bu ünitenin fiilleri, kalanı açılmış tüm ünitelerin fiilleri
         const kendi = unite.cekimler || [], havuz = this.cekimHavuzu(unite).map((x) => x.c);
         const c = kendi.length && (Math.random() < 0.5 || havuz.length <= kendi.length) ? rastgele(kendi) : rastgele(havuz);
-        return this.cekim(c, Math.random() < 0.55 ? 'yaz' : 'sec', this._tekKisi(c));
+        return this.cekim(c, yazModu(0.55) ? 'yaz' : 'sec', this._tekKisi(c));
       }
       if (t === 'cekim_cumle') {
         const ad = this.cekimAdaylari(unite), kendi = ad.filter((x) => (unite.cekimler || []).includes(x.c));
-        return this.cekimCumle(this._tek(kendi.length && Math.random() < 0.5 ? kendi : ad, t), Math.random() < 0.5 ? 'yaz' : 'sec');
+        return this.cekimCumle(this._tek(kendi.length && Math.random() < 0.5 ? kendi : ad, t), yazModu(0.5) ? 'yaz' : 'sec');
       }
       if (t === 'ser_estar') return this.serEstar(this._tek(this.serEstarAdaylari(unite), t));
-      if (t === 'ceviri') return this.ceviri(this.cumleSec(unite, t, KISA_CUMLE));
+      if (t === 'ceviri') return this.ceviriVeya(this.cumleSec(unite, t, KISA_CUMLE), this.cumleHavuzu(unite));
       if (t === 'dogru_yanlis') {
         const cm = this.cumleSec(unite, t, (c) => !c.es.includes('—'));
         return this.dogruYanlis(cm, Math.random() < 0.55 ? this.boz(cm.es, unite) : null);
       }
       if (t === 'artikel') {
-        const coglar = unite.sira >= COGUL_SIRA ? kel.filter(cogulUygun) : [], mod = coglar.length && Math.random() < 0.4 ? 'cogul' : 'artikel';
+        // çoğul yapma bir yazma sorusu: telefonda çoğunlukla artikel seçmeye döner
+        const coglar = unite.sira >= COGUL_SIRA ? kel.filter(cogulUygun) : [], mod = coglar.length && yazModu(0.4) ? 'cogul' : 'artikel';
         return this.artikel(this._tek(mod === 'cogul' ? coglar : kel.filter(artikelUygun), mod), mod);
       }
       if (t === 'soru_cevap') {
@@ -931,7 +1025,7 @@
         if (k.yazma === false) { liste.push(this.sec(k, 'tr')); return; }
         if (k.okunus && sira % 3 === 0) { sira++; liste.push(this.okunus(k, 'yazilis')); return; }
         const t = kelimeTurleri[sira++ % kelimeTurleri.length];
-        liste.push(t === 'yaz' ? this.yaz(k) : t === 'sec_tr' ? this.sec(k, 'tr') : this.dinle(k, t === 'dinle_yaz' ? 'yaz' : 'sec'));
+        liste.push(t === 'yaz' ? this.yazVeya(k, true) : t === 'sec_tr' ? this.sec(k, 'tr') : this.dinle(k, t === 'dinle_yaz' && yazmaKalsin() ? 'yaz' : 'sec'));
       });
       // 2) cümle düzeyi: 2 cümle kurma, (ses varsa) 1 dinleyip kurma, 3 boşluk/diyalog
       const cum = unite.cumleler, bos = unite.bosluklar || [];
@@ -947,16 +1041,16 @@
       }
       // 3) yeni türler: fiil çekimi (2), artikel/çoğul (1–2), soru-cevap (1), rakam (2)
       (unite.cekimler || []).length && karistir(unite.cekimler.flatMap((c) => KISILER.filter((x) => c[x[0]]).map((x) => [c, x[0]]))).slice(0, 2)
-        .forEach(([c, x], i) => liste.push(this.cekim(c, i ? 'sec' : 'yaz', x)));
+        .forEach(([c, x], i) => liste.push(this.cekim(c, i || !yazmaKalsin() ? 'sec' : 'yaz', x)));
       const isimler = unite.kelimeler.filter(artikelUygun);
       if (unite.sira >= ARTIKEL_SIRA && isimler.length >= 4) {
         liste.push(this.artikel(rastgele(isimler), 'artikel'));
-        const cog = unite.sira >= COGUL_SIRA ? unite.kelimeler.filter(cogulUygun) : []; if (cog.length) liste.push(this.artikel(rastgele(cog), 'cogul'));
+        const cog = unite.sira >= COGUL_SIRA ? unite.kelimeler.filter(cogulUygun) : []; if (cog.length && yazmaKalsin()) liste.push(this.artikel(rastgele(cog), 'cogul'));
       }
       if ((unite.soruCevap || []).length >= 3) liste.push(this.soruCevap(rastgele(unite.soruCevap), this._scHavuz(unite), 'sec'));
       // 4) cümle düzeyinde yeni türler: 1 çeviri, (fiil varsa) 1 cümle içinde çekim
       const kisa = this.cumleHavuzu(unite).filter(KISA_CUMLE);
-      if (kisa.length) liste.push(this.ceviri(this._tek(kisa, 'ceviri')));
+      if (kisa.length) liste.push(this.ceviriVeya(this._tek(kisa, 'ceviri'), this.cumleHavuzu(unite)));
       const cc = this.cekimAdaylari(unite).filter((x) => (unite.cekimler || []).includes(x.c));
       if (cc.length) liste.push(this.cekimCumle(this._tek(cc, 'cekim_cumle'), 'sec'));
       (unite.rakam || []).length && [0, 1].forEach(() => liste.push(this.rakam(rastgele(unite.rakam))));
@@ -973,7 +1067,7 @@
         if (k.yazma !== false && Ses.aktif()) secenek.push('dinle_sec', 'dinle_yaz');
         (window.Puan ? Puan.zorTurler(k.id) : []).forEach((zt) => { if (secenek.includes(zt)) secenek.push(zt, zt); });
         const t = rastgele(secenek);
-        liste.push(t === 'dinle_sec' ? this.dinle(k, 'sec') : t === 'dinle_yaz' ? this.dinle(k, 'yaz') : t === 'yaz' ? this.yaz(k) : this.sec(k, t === 'sec_es' ? 'es' : 'tr'));
+        liste.push(t === 'dinle_sec' ? this.dinle(k, 'sec') : t === 'dinle_yaz' ? this.dinle(k, yazmaKalsin() ? 'yaz' : 'sec') : t === 'yaz' ? this.yazVeya(k) : this.sec(k, t === 'sec_es' ? 'es' : 'tr'));
       });
       while (liste.length < adet && uniteler.length) liste.push(this.uniteden(rastgele(uniteler)));
       return karistir(liste);

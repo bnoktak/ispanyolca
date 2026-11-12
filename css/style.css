@@ -399,6 +399,12 @@ button:disabled { cursor: default; }
 .kelime-ipucu { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0; }
 .kelime-ipucu span { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 8px; padding: 3px 8px; font-size: 14px; color: var(--ana); }
 
+/* 🔤 harflerden kur */
+.harf-satir { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 16px; }
+.harf-satir .on-ek { font-size: 20px; font-weight: 700; padding-bottom: 18px; color: var(--soluk); }
+.harf-satir .cevap-satiri { flex: 1; margin-bottom: 0; gap: 4px; }
+.cevap-satiri.harfli .tas, .taslar.harfler .tas { min-width: 44px; padding: 8px 10px; font-size: 20px; text-align: center; }
+
 /* ---------- iPhone / PWA ---------- */
 /* çift dokunuşta yakınlaşma ve dokunma parlaması olmasın; yatayda yazı büyümesin */
 html { -webkit-text-size-adjust: 100%; }

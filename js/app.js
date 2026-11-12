@@ -595,6 +595,13 @@
         <button class="ikinci-buton" id="rapor">📊 Zorluk raporunu aç</button>
       </section>
       <section class="kutu">
+        <h3>📱 Telefon modu</h3>
+        <label class="satir">Mod: <select id="telefon-modu">
+          ${[['oto', `Otomatik (şu an ${Cihaz.otoTelefon() ? 'açık' : 'kapalı'})`], ['acik', 'Açık'], ['kapali', 'Kapalı']].map(([v, a]) => `<option value="${v}" ${(Cihaz.al('telefonModu') || 'oto') === v ? 'selected' : ''}>${a}</option>`).join('')}
+        </select></label>
+        <p class="aciklama">Telefon modunda yazma soruları çoğunlukla şıklara, harf ve kelime taşlarına dönüşür (yaklaşık beşte biri yazma kalır). Bu ayar yalnızca bu cihazda geçerlidir.</p>
+      </section>
+      <section class="kutu">
         <h3>🇬🇧 İngilizce karşılıklar</h3>
         <label class="satir"><input type="checkbox" id="ingilizce" ${ingilizce() ? 'checked' : ''}> Kartlarda ve cevaptan sonra İngilizcesini de göster</label>
       </section>
@@ -619,6 +626,7 @@
       <p class="surum">İspanyolca v2.2 (A1, 27 ünite) · veri formatı ${Depo.veri.surum}${window.PWA && PWA.surum ? ` · yayın ${esc(PWA.surum)}` : ''}</p>`;
     kok.querySelector('.geri').addEventListener('click', anaEkran);
     kok.querySelector('#puanlama').addEventListener('change', (e) => { Depo.veri.ayarlar.puanlama = e.target.checked; Depo.kaydet(); });
+    kok.querySelector('#telefon-modu').addEventListener('change', (e) => { Cihaz.koy('telefonModu', e.target.value); telefonSinifi(); });
     kok.querySelector('#rapor').addEventListener('click', raporEkrani);
     kok.querySelector('#ingilizce').addEventListener('change', (e) => { Depo.veri.ayarlar.ingilizce = e.target.checked; Depo.kaydet(); });
     if (Ses.sesVar()) {
@@ -784,6 +792,9 @@
 
   /* ---------- başlat ---------- */
   Depo.dinle(() => { /* kayıt durumu değişince ana ekrandaysak yenilenebilir */ });
+  // 📱 Telefon modu: <body class="telefon"> görünümü değiştirir (css), soru dönüşümleri Alistirma'da
+  function telefonSinifi() { document.body.classList.toggle('telefon', Cihaz.telefon()); }
+  telefonSinifi();
   Promise.all([Depo.baslat(), Ses.baslat()]).then(anaEkran);
   window.addEventListener('beforeunload', () => { Depo._yazHepsi(); });
 })();

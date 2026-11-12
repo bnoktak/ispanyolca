@@ -20,7 +20,8 @@
     okunus_yazilis: 'Okunuş → doğru yazılış', okunus_ses: 'Hangi kelimede bu ses var?', cekim_yaz: 'Fiil çekimi (yazma)', cekim_sec: 'Fiil çekimi (seçme)',
     artikel: 'Artikel seçme (el / la)', cogul: 'Çoğul yapma', sc_sec: 'Soruya doğru cevap', sc_eslestir: 'Soru–cevap eşleştirme', rakam: 'Dinle → rakamla yaz',
     sc_dinle: 'Soruyu dinle → cevabı seç', cekim_cumle_yaz: 'Cümlede fiil çekimi (yazma)', cekim_cumle_sec: 'Cümlede fiil çekimi (seçme)',
-    ser_estar: 'ser mi estar mı?', ceviri: 'Türkçe cümle → İspanyolca yaz', dogru_yanlis: 'Cümle doğru mu yanlış mı?'
+    ser_estar: 'ser mi estar mı?', ceviri: 'Türkçe cümle → İspanyolca yaz', dogru_yanlis: 'Cümle doğru mu yanlış mı?',
+    harf_kur: 'Türkçe → harflerden İspanyolca kur', ceviri_kur: 'Türkçe cümle → kelimelerden kur'
   };
 
   const Puan = {

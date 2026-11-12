@@ -254,4 +254,27 @@
   };
 
   window.Depo = Depo;
+
+  /* ---------------- Cihaz ayarları ----------------
+     Yalnızca bu cihazda saklanır, ilerleme dosyasına (ve ileride buluta) GİTMEZ:
+     telefonun ayarı bilgisayara taşınmasın. { telefonModu: 'oto'|'acik'|'kapali', ozetGorunum: 'tablo'|'kartlar' } */
+  const CIHAZ_ANAHTAR = 'ispanyolca_cihaz';
+  const Cihaz = {
+    _veri: null,
+    _oku() {
+      if (!this._veri) { try { this._veri = JSON.parse(localStorage.getItem(CIHAZ_ANAHTAR)) || {}; } catch (e) { this._veri = {}; } }
+      return this._veri;
+    },
+    al(k) { return this._oku()[k]; },
+    koy(k, v) { this._oku()[k] = v; try { localStorage.setItem(CIHAZ_ANAHTAR, JSON.stringify(this._veri)); } catch (e) { /* yer yoksa geç */ } },
+    // Otomatik: dokunmatik (parmakla kullanılan) ve telefon boyutunda ekran
+    otoTelefon() {
+      try { return matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) <= 600; } catch (e) { return false; }
+    },
+    telefon() {
+      const m = this.al('telefonModu') || 'oto';
+      return m === 'acik' || (m === 'oto' && this.otoTelefon());
+    }
+  };
+  window.Cihaz = Cihaz;
 })();
