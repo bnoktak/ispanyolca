@@ -49,6 +49,13 @@ denetim.js            içerik denetimi: öğretilmemiş kelime var mı?
 - Tarayıcıda dene. Uygulamanın her ünitede her soru türünü hatasız üretmesi gerekir: konsolda `Alistirma.uniteden(u)` ile çok sayıda soru üretip `render` edilebilir.
 - Arayüz değişikliklerinden sonra hem geniş ekranda hem telefon genişliğinde (390 px) kontrol et.
 
+## Yayın (GitHub Pages)
+- Depo: https://github.com/bnoktak/ispanyolca (herkese açık) · Site: https://bnoktak.github.io/ispanyolca/ (`main` dalı, kök klasör)
+- `.gitignore` ilerleme dosyalarını (`ilerleme*.json`, `yedekler/`) dışarıda tutar; commit öncesi `git status` ile kontrol et.
+- Akış: claude.ai'dan gelen içerik dosyasını `icerik/` içine kopyala → `node denetim.js` "Temiz" → commit (Türkçe, kısa) → `git push`. Site 1–2 dakikada güncellenir.
+- Commit kimliği: `bk` / `bnoktak@users.noreply.github.com`. Push, Claude Code'un kendi kabuğunda giriş isteyemez; giriş gerekirse Terminal panelinde çalıştır.
+- `.nojekyll`: GitHub'ın Jekyll işlemesini kapatır, silinmemeli.
+
 ## Kullanıcı hakkında
 - Windows kullanıyor, iPhone'u var, Mac'i yok.
 - Uygulamayı Vivaldi (Chromium) ile açıyor.
