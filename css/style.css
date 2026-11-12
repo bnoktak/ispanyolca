@@ -398,3 +398,23 @@ button:disabled { cursor: default; }
 .ipucu-goster { margin: 8px 0; }
 .kelime-ipucu { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0; }
 .kelime-ipucu span { background: var(--kart); border: 1px solid var(--cizgi); border-radius: 8px; padding: 3px 8px; font-size: 14px; color: var(--ana); }
+
+/* ---------- iPhone / PWA ---------- */
+/* çift dokunuşta yakınlaşma ve dokunma parlaması olmasın; yatayda yazı büyümesin */
+html { -webkit-text-size-adjust: 100%; }
+button, a, label, .tas, .sik, .kart-k { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+/* iOS, 16px'ten küçük yazı kutusuna dokununca sayfayı büyütür */
+input, select, textarea { font-size: max(16px, 1em); }
+.satir select { font-size: 16px; }
+/* çentik ve ekran kenarları (ana ekrandan açılınca durum çubuğu sayfanın üstündedir) */
+#uygulama {
+  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-left: calc(16px + env(safe-area-inset-left));
+  padding-right: calc(16px + env(safe-area-inset-right));
+}
+/* 🔄 Yeni sürüm şeridi (js/pwa.js) */
+.surum-serit { position: fixed; z-index: 50; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top));
+  display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 999px;
+  background: var(--kart); border: 2px solid var(--ana); box-shadow: var(--golge); font-size: 15px; font-weight: 600;
+  max-width: calc(100% - 24px); white-space: nowrap; animation: yukari .2s ease-out; }
+.surum-serit button { background: var(--ana); color: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 700; }

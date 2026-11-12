@@ -192,7 +192,7 @@
             alan.innerHTML = ust + `<div class="siklar">${siklar.map((f, i) => `<button class="sik" data-i="${i}"><span class="no">${i + 1}</span>${esc(f)}</button>`).join('')}</div>`;
             siklariBagla(alan, siklar.length, siklar.indexOf(dogru.toLowerCase()), (i) => sonuc(siklar[i], { dogru: siklar[i] === dogru.toLowerCase() }));
           } else {
-            alan.innerHTML = ust + `<form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Çekimi yaz…">${aksanKlavyesi()}<button type="submit" class="ana-buton">Kontrol et</button></form>`;
+            alan.innerHTML = ust + `<form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Çekimi yaz…">${aksanKlavyesi()}<button type="submit" class="ana-buton">Kontrol et</button></form>`;
             const input = alan.querySelector('input'); aksanBagla(alan, input); setTimeout(() => input.focus(), 50);
             alan.querySelector('form').addEventListener('submit', (e) => {
               e.preventDefault(); if (!input.value.trim() || input.disabled) return; input.disabled = true;
@@ -229,7 +229,7 @@
         render(alan, bitti) {
           alan.innerHTML = `<p class="yonerge">✍️ Cümleyi İspanyolca yaz</p>
             <div class="soru">${esc(cm.tr)}</div>
-            <form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="İspanyolcası…">${aksanKlavyesi()}
+            <form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="İspanyolcası…">${aksanKlavyesi()}
             <button type="submit" class="ana-buton">Kontrol et</button></form>`;
           const input = alan.querySelector('input'); aksanBagla(alan, input); setTimeout(() => input.focus(), 50);
           alan.querySelector('form').addEventListener('submit', (e) => {

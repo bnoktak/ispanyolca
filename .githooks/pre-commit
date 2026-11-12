@@ -1,0 +1,6 @@
+#!/bin/sh
+# Her commit'ten önce sw.js'deki SURUM etiketini tarih-saate çevirir.
+# Böylece her yayında telefon "yeni sürüm var" diye anlar ve güncelleme şeridini gösterir.
+# Kurulum (bu klasörde bir kez; format sonrası yeniden): git config core.hooksPath .githooks
+etiket=$(date +%Y-%m-%d_%H-%M-%S)
+sed -i "s/^const SURUM = '[^']*';/const SURUM = '$etiket';/" sw.js && git add sw.js

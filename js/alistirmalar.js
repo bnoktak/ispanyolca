@@ -310,7 +310,7 @@
           alan.innerHTML = `
             <p class="yonerge">İspanyolca yaz</p>
             <div class="soru">${esc(kelime.tr)}</div>
-            <form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Cevabın…">
+            <form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Cevabın…">
             ${aksanKlavyesi()}
             <button type="submit" class="ana-buton">Kontrol et</button></form>`;
           const input = alan.querySelector('input'); aksanBagla(alan, input);
@@ -342,7 +342,7 @@
             </div>
             ${mod === 'sec'
               ? `<div class="siklar">${siklar.map((k, i) => `<button class="sik" data-i="${i}"><span class="no">${i + 1}</span>${esc(k.tr)}</button>`).join('')}</div>`
-              : `<form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Duyduğunu yaz…">${aksanKlavyesi()}<button type="submit" class="ana-buton">Kontrol et</button></form>`}`;
+              : `<form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Duyduğunu yaz…">${aksanKlavyesi()}<button type="submit" class="ana-buton">Kontrol et</button></form>`}`;
           const cal = (yavas) => Ses.oku(kelime.es, yavas);
           alan.querySelector('.dinle-buton').addEventListener('click', () => cal(false));
           alan.querySelector('.yavas-buton').addEventListener('click', () => cal(true));
@@ -636,7 +636,7 @@
             alan.querySelectorAll('.sik').forEach((b) => b.addEventListener('click', () => sec(+b.dataset.i)));
             alan._tus = (e) => { const n = +e.key; if (n >= 1 && n <= siklar.length) sec(n - 1); };
           } else {
-            alan.innerHTML = soruHtml + `<form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Çekimi yaz…">${aksanKlavyesi()}<button type="submit" class="ana-buton">Kontrol et</button></form>`;
+            alan.innerHTML = soruHtml + `<form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Çekimi yaz…">${aksanKlavyesi()}<button type="submit" class="ana-buton">Kontrol et</button></form>`;
             const input = alan.querySelector('input'); aksanBagla(alan, input); setTimeout(() => input.focus(), 50);
             alan.querySelector('form').addEventListener('submit', (e) => {
               e.preventDefault(); if (!input.value.trim() || input.disabled) return; input.disabled = true;
@@ -675,7 +675,7 @@
           } else {
             alan.innerHTML = `<p class="yonerge">Çoğulunu yaz (artikeliyle)</p>
               <div class="soru"><span class="es">${esc(k.es)}</span><small class="okunus">${esc(k.tr)} → çoğul</small></div>
-              <form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="los / las …">${aksanKlavyesi()}<button type="submit" class="ana-buton">Kontrol et</button></form>`;
+              <form class="yazma"><input type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="los / las …">${aksanKlavyesi()}<button type="submit" class="ana-buton">Kontrol et</button></form>`;
             const input = alan.querySelector('input'); aksanBagla(alan, input); setTimeout(() => input.focus(), 50);
             alan.querySelector('form').addEventListener('submit', (e) => {
               e.preventDefault(); if (!input.value.trim() || input.disabled) return; input.disabled = true;
@@ -766,7 +766,7 @@
           alan.innerHTML = `<p class="yonerge">${sesli ? '🎧 Dinle ve rakamla yaz' : '🔢 Rakamla yaz'} <small>(${s.ornek})</small></p>
             ${sesli ? `<div class="dinle-alan"><button type="button" class="dinle-buton" title="Tekrar dinle">🔊</button><button type="button" class="yavas-buton">🐢 yavaş</button></div>`
                     : `<div class="soru es">${esc(s.metin)}</div>`}
-            <form class="yazma"><input type="text" inputmode="decimal" autocomplete="off" placeholder="${s.ornek}"><button type="submit" class="ana-buton">Kontrol et</button></form>`;
+            <form class="yazma"><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="${s.ornek}"><button type="submit" class="ana-buton">Kontrol et</button></form>`;
           if (sesli) {
             const cal = (y) => Ses.oku(s.metin, y);
             alan.querySelector('.dinle-buton').addEventListener('click', () => cal(false));

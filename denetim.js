@@ -29,4 +29,10 @@ for (const u of ICERIK.uniteler) {
     if (bil.length) { sorun++; console.log(u.id, '|', m, '→', bil.join(', ')); }
   }
 }
+// Yayın listesi: index.html'deki her dosya sw.js'de (çevrimdışı önbellek) var mı, listedeki dosyalar gerçekten var mı?
+const html = fs.readFileSync('index.html', 'utf8'), sw = fs.readFileSync('sw.js', 'utf8');
+const swListe = (sw.match(/const DOSYALAR = \[([\s\S]*?)\]/) || [, ''])[1].match(/'[^']+'/g).map((s) => s.slice(1, -1));
+[...html.matchAll(/(?:src|href)="([^"#:]+)"/g)].map((m) => m[1]).filter((y) => !swListe.includes(y))
+  .forEach((y) => { sorun++; console.log('sw.js listesinde yok:', y); });
+swListe.filter((y) => y !== './' && !fs.existsSync(y)).forEach((y) => { sorun++; console.log('sw.js listesindeki dosya yok:', y); });
 console.log(sorun ? `${sorun} sorun` : 'Temiz: öğretilmemiş kelime yok');

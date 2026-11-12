@@ -13,7 +13,7 @@ Ayrıntılı kararlar `PLAN.md` içinde, telefona taşıma planı `TELEFON_PLANI
 ## Mimari
 - Derleme adımı yok: düz HTML/CSS/JS, **klasik `<script>` etiketleri** (modül değil). Bilgisayarda `index.html` çift tıklanıp `file://` ile de çalışmalı; bu özellik bozulmamalı.
 - Global nesneler: `ICERIK` (içerik), `Depo` (kayıt), `Tekrar` (aralıklı tekrar), `Ses` (sesli okuma), `Alistirma` (soru türleri), `Puan` (1-2-3 zorluk günlüğü).
-- Yeni bir dosya eklenirse `index.html` içindeki script sırasına eklenmeli.
+- Yeni bir dosya eklenirse `index.html` içindeki script sırasına **ve `sw.js` içindeki `DOSYALAR` listesine** eklenmeli (`node denetim.js` eksikleri bildirir).
 
 ```
 index.html            uygulama ve script listesi
@@ -26,6 +26,10 @@ js/uretici.js         şablon cümleler, birikimli çekim, cümlede çekim, ser/
 js/app.js             ekranlar (ana ekran, ünite, kartlar, alıştırma, sınav, özet tablolar, ayarlar)
 js/ses.js             Web Speech API ile İspanyolca okuma
 js/ai.js              yapay zekâ modülü (kapalı)
+js/pwa.js             service worker kaydı, "🔄 Yeni sürüm hazır" şeridi (yalnızca https'te)
+sw.js                 service worker: çevrimdışı önbellek, SURUM etiketi (kanca her commit'te günceller)
+manifest.webmanifest  ana ekrana ekleme bilgileri · ikon/ 🌮 ikonları (180/192/512)
+.githooks/pre-commit  sw.js SURUM etiketini tarih-saate çevirir
 icerik/icerik.js      içerik kaydı + ünite biçiminin açıklaması
 icerik/uXX-*.js       27 ana ünite (sırayla açılır)
 icerik/xXX-*.js       ek üniteler (ek: true, kilitsiz, sira 100+)
@@ -55,6 +59,7 @@ denetim.js            içerik denetimi: öğretilmemiş kelime var mı?
 - Akış: claude.ai'dan gelen içerik dosyasını `icerik/` içine kopyala → `node denetim.js` "Temiz" → commit (Türkçe, kısa) → `git push`. Site 1–2 dakikada güncellenir.
 - Commit kimliği: `bk` / `bnoktak@users.noreply.github.com`. Push, Claude Code'un kendi kabuğunda giriş isteyemez; giriş gerekirse Terminal panelinde çalıştır.
 - `.nojekyll`: GitHub'ın Jekyll işlemesini kapatır, silinmemeli.
+- Sürüm kancası: her commit'te `sw.js` SURUM etiketi değişir, telefon yeni sürümü indirip şerit gösterir. Format sonrası depoyu indirince bir kez `git config core.hooksPath .githooks` çalıştır.
 
 ## Kullanıcı hakkında
 - Windows kullanıyor, iPhone'u var, Mac'i yok.

@@ -19,6 +19,11 @@
           this.sesler = speechSynthesis.getVoices().filter((v) => /^es/i.test(v.lang));
           return this.sesler.length > 0;
         };
+        // iOS: ses ancak bir dokunuştan sonra çalar. İlk dokunuşta sessiz bir okuma yapıp sesi "açar",
+        // böylece dinleme sorularındaki otomatik okuma da çalışır. (Masaüstünde dokunma olayı yok, etkilenmez.)
+        document.addEventListener('touchend', () => {
+          try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) { /* yoksay */ }
+        }, { once: true, passive: true });
         if (yukle()) return coz();
         speechSynthesis.addEventListener('voiceschanged', () => { yukle(); coz(); });
         setTimeout(coz, 1500);
@@ -30,13 +35,18 @@
     aktif() { return this.sesVar() && this.ayar().ses !== false; },
     otoOku() { return this.aktif() && this.ayar().otoOku !== false; },
 
-    // Seçili ses → yoksa Latin Amerika sesi → yoksa herhangi bir İspanyolca ses
+    // Seçili ses → yoksa en uygun ses: es-MX, es-US, diğer Latin Amerika, es-ES sırası;
+    // aynı dilde "Gelişmiş/Enhanced/Premium" sesler (iPhone) ve cihazın kendi sesleri öne alınır
     secili() {
       const ad = this.ayar().sesAdi;
-      return this.sesler.find((v) => v.name === ad) ||
-        this.sesler.find((v) => LATAM.test(v.lang) && v.localService) ||
-        this.sesler.find((v) => LATAM.test(v.lang)) ||
-        this.sesler[0] || null;
+      const kayitli = this.sesler.find((v) => v.name === ad);
+      if (kayitli) return kayitli;
+      const puan = (v) => {
+        const dil = /^es[-_]MX/i.test(v.lang) ? 0 : /^es[-_]US/i.test(v.lang) ? 1 : LATAM.test(v.lang) ? 2 : /^es[-_]ES/i.test(v.lang) ? 3 : 4;
+        const kalite = /enhanced|premium|gelişmiş|mejorad/i.test(v.name + ' ' + (v.voiceURI || '')) ? 0 : 1;
+        return dil * 4 + kalite * 2 + (v.localService ? 0 : 1);
+      };
+      return this.sesler.slice().sort((a, b) => puan(a) - puan(b))[0] || null;
     },
 
     // "encantado / encantada" → "encantado"

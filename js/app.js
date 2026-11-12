@@ -250,7 +250,7 @@
           ${g.kelimeler.map((k) => `
             <div class="toplu-satir" data-id="${k.id}">
               <label for="in-${k.id}" class="${yon === 'tr' ? 'es' : ''}">${esc(yon === 'es' ? k.tr : k.es)}${yon === 'tr' && Ses.aktif() && Ses.okunurMu(k) ? ` <button type="button" class="ses" data-ses="${esc(k.es)}">🔊</button>` : ''}</label>
-              <input id="in-${k.id}" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${yon === 'es' ? 'İspanyolcası…' : 'Türkçesi…'}">
+              <input id="in-${k.id}" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${yon === 'es' ? 'İspanyolcası…' : 'Türkçesi…'}">
               <div class="toplu-cevap"></div>
             </div>`).join('')}
         </section>`).join('')}
@@ -616,7 +616,7 @@
         <p class="aciklama">Tüm ilerleme silinir. Önce yedek indirmen önerilir.</p>
         <button class="tehlike-buton" id="sifirla">Sıfırla</button>
       </section>
-      <p class="surum">İspanyolca v2.1 (A1, 27 ünite) · veri formatı ${Depo.veri.surum}</p>`;
+      <p class="surum">İspanyolca v2.2 (A1, 27 ünite) · veri formatı ${Depo.veri.surum}${window.PWA && PWA.surum ? ` · yayın ${esc(PWA.surum)}` : ''}</p>`;
     kok.querySelector('.geri').addEventListener('click', anaEkran);
     kok.querySelector('#puanlama').addEventListener('change', (e) => { Depo.veri.ayarlar.puanlama = e.target.checked; Depo.kaydet(); });
     kok.querySelector('#rapor').addEventListener('click', raporEkrani);
@@ -725,7 +725,7 @@
     // 3) tüm kelimeler, ünite ünite, aranabilir
     const uniteler = ICERIK.uniteler.filter((u) => u.sira <= acikSira);
     const kelimeHtml = `<section class="kutu ozet-kutu"><h3>📖 Tüm kelimeler (${uniteler.reduce((a, u) => a + u.kelimeler.filter((k) => k.yazma !== false).length, 0)})</h3>
-      <input type="search" class="ozet-ara" placeholder="Ara: İspanyolca ya da Türkçe…" autocomplete="off">
+      <input type="search" class="ozet-ara" placeholder="Ara: İspanyolca ya da Türkçe…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       ${uniteler.map((u) => `<details class="ozet-unite" ${u.sira === acikSira ? 'open' : ''}><summary>${u.emoji} ${u.sira}. ${esc(u.baslik)}</summary>
         <table class="kelime-tablo">${u.kelimeler.filter((k) => k.yazma !== false).map((k) => `<tr data-ara="${esc((k.es + ' ' + k.tr + ' ' + (k.en || '')).toLocaleLowerCase('tr'))}"><td>${Ses.okunurMu(k) ? sesli(k.es) : esc(k.es)}</td><td>${esc(k.tr)}</td></tr>`).join('')}</table>
       </details>`).join('')}</section>`;
