@@ -75,22 +75,26 @@ module.exports = async function ispanyolcaWidget({ veriAdresi }) {
       if (c && turkceGoster) metin(w, c[1], Font.italicSystemFont(11), null, 1);
       if (!c && !turkceGoster) metin(w, 'Anlamı için dokun', Font.systemFont(11), null, 1);
     } else {
-      // ana ekran: renkli kart(lar)
-      const ust = w.addStack(); ust.centerAlignContent();
-      metin(ust, '🌮 İspanyolca', Font.semiboldSystemFont(11), RENK.soluk);
-      w.addSpacer(adet > 1 ? 6 : 8);
-      const satirlar = aile === 'medium' ? w.addStack() : w;
+      // ana ekran: renkli kart(lar). Scriptable yazıları ortalar: her satır yatay bir yığında,
+      // ardından esnek boşlukla sola yaslanır.
+      const buyuk = adet > 2;
+      const solaYasli = (kap, t, font, renk, satir) => { const s = kap.addStack(); s.layoutHorizontally(); const x = metin(s, t, font, renk, satir); s.addSpacer(); return x; };
+      solaYasli(w, '🌮 İspanyolca', Font.semiboldSystemFont(11), RENK.soluk);
+      w.addSpacer(buyuk ? 4 : adet > 1 ? 6 : 8);
+      const satirlar = aile === 'medium' ? w.addStack() : null;
+      if (satirlar) satirlar.layoutHorizontally();
       secilen.forEach((x, i) => {
-        if (aile === 'medium' && i > 0) satirlar.addSpacer(14);     // orta: iki kelime yan yana
-        const kutu = aile === 'medium' ? satirlar.addStack() : w.addStack();
+        if (satirlar && i > 0) satirlar.addSpacer(14);                // orta: iki kelime yan yana
+        if (buyuk && i > 0) w.addSpacer();                            // büyük: kelimeler dikeyde eşit dağılır
+        const kutu = (satirlar || w).addStack();
         kutu.layoutVertically();
         const c = cumle(x);
-        metin(kutu, ilkBicim(x.es), Font.boldSystemFont(adet > 2 ? 18 : 22), RENK.ana, 1);
-        if (turkceGoster) metin(kutu, x.tr, Font.mediumSystemFont(12), RENK.yazi, 1);
-        if (c) { kutu.addSpacer(3); metin(kutu, c[0], Font.systemFont(adet > 2 ? 12 : 13), RENK.yazi, adet > 2 ? 1 : 3); }
-        if (c && turkceGoster) metin(kutu, c[1], Font.italicSystemFont(11), RENK.soluk, adet > 2 ? 1 : 2);
-        if (aile !== 'medium' && i < secilen.length - 1) w.addSpacer(8);
+        solaYasli(kutu, ilkBicim(x.es), Font.boldSystemFont(buyuk ? 20 : 22), RENK.ana, 1);
+        if (turkceGoster) solaYasli(kutu, x.tr, Font.mediumSystemFont(buyuk ? 13 : 12), RENK.yazi, 1);
+        if (c) { kutu.addSpacer(2); solaYasli(kutu, c[0], Font.systemFont(buyuk ? 14 : 13), RENK.yazi, buyuk ? 2 : 3); }
+        if (c && turkceGoster) solaYasli(kutu, c[1], Font.italicSystemFont(buyuk ? 12 : 11), RENK.soluk, buyuk ? 1 : 2);
       });
+      if (satirlar) satirlar.addSpacer();
       w.addSpacer();
     }
     Script.setWidget(w); Script.complete(); return;
