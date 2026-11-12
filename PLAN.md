@@ -12,7 +12,10 @@ Kişisel kullanım için İspanyolca öğrenme uygulaması. Bu dosya, hangi kara
 ## Altyapı kararları
 | Karar | Neden |
 |---|---|
-| İnternetsiz, tek klasör, düz HTML/CSS/JS | Claude hesabına / internete / sunucuya bağımlı olmasın; kurulum gerektirmesin |
+| İnternetsiz, tek klasör, düz HTML/CSS/JS | Claude hesabına / internete / sunucuya bağımlı olmasın; kurulum gerektirmesin. `file://` ile açılış hâlâ çalışır |
+| Ayrıca GitHub Pages'te yayın + PWA (Kasım 2026) | Telefonda (iPhone) ana ekrana eklenip çevrimdışı kullanılsın; ayrıntılar `TELEFON_PLANI.md` |
+| Senkron: gizli GitHub Gist, birleştirerek (`js/senkron.js`) | Bilgisayar ve telefon aynı ilerlemeyi paylaşsın; anahtar yalnızca cihazda, isteğe bağlı |
+| Cihaz ayarları ayrı (`Cihaz`: telefon modu, özet görünümü, senkron anahtarı) | Telefonun ayarı senkronla bilgisayara taşınmasın |
 | İlerleme tarayıcıda tutulur; Ayarlar → "Harddiske kaydet" ile klasördeki `ilerleme.json`'a yazılır | Her açılışta izin sorulmasın (kullanıcı isteği); izin sadece kaydederken istenir. Format öncesi bir kez kaydetmek yeterli |
 | `ilerleme.onceki.json` bir önceki kayıt | Dosya bozulursa geri dönülebilsin |
 | Tarayıcı içi önbellek + Yedek indir/yükle | Klasöre yazılamazsa da veri kaybolmasın |
@@ -85,8 +88,8 @@ Kişisel kullanım için İspanyolca öğrenme uygulaması. Bu dosya, hangi kara
 4. ✅ v1.5: içerik denetimi, boşluk doldurma + diyaloglar, cümle dinleme, genel tekrar
 5. ✅ v2.0–2.1: A1 genişletildi (27 ünite, Güney Amerika odaklı), yeni soru türleri, zorluk puanı ve raporu
 6. ✅ v2.2: soru çeşitliliği (birikimli çekim, cümle içinde çekim, ser/estar, çeviri, doğru/yanlış, şablon cümleler) + ek üniteler
-7. (Yapılacak) A2 üniteleri
-8. (Yapılacak) Telefon: GitHub Pages'te yayın + ilerleme senkronu (yeni kayıt sürücüsü)
+7. ✅ v2.3 (Kasım 2026): telefon — GitHub Pages + PWA, 📱 telefon modu (harf/kelime taşları), gizli Gist senkronu (veri sürümü 2), 🃏 mini kart, Scriptable ana ekran widget'ı, 806/809 kelimeye örnek cümle (`icerik/kelime-cumleleri.js`). Ayrıntılar `TELEFON_PLANI.md`
+8. (Yapılacak) A2 üniteleri
 9. (İsteğe bağlı) Yapay zekâ: cümle düzeltme, sohbet pratiği
 
 ## Dosya yapısı
@@ -101,9 +104,16 @@ js/uretici.js         şablon cümleler, birikimli çekim, yeni türler (cümled
 js/app.js             ekranlar
 js/ses.js             sesli okuma
 js/ai.js              yapay zekâ (kapalı)
+js/widget.js          öğrenilen kelimeler + örnek cümle (mini kart, widget), widget.json
+js/senkron.js         ☁️ Gist senkronu + birleştirme
+js/pwa.js · sw.js     telefona kurulum, çevrimdışı önbellek, "yeni sürüm" şeridi
+widget/               iPhone widget'ı (Scriptable, siteden indirilir)
 icerik/icerik.js      içerik kaydı + ünite biçimi açıklaması
 icerik/uXX-*.js       üniteler
 icerik/xXX-*.js       ek üniteler (kilitsiz)
 icerik/sablonlar.js   cümle şablonları
-ilerleme.json         senin ilerlemen (ilk kayıtta oluşur)
+icerik/kelime-cumleleri.js  kelime örnek cümleleri
+denetim.js · cumle-hazirlik.js  içerik denetimi · cümle hazırlık listesi
+ilerleme.json         senin ilerlemen (ilk kayıtta oluşur; depoya girmez)
 ```
+Ayrıntılı ve güncel dosya listesi: `CLAUDE.md`.

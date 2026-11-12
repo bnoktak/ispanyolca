@@ -19,7 +19,7 @@ Ayrıntılı kararlar `PLAN.md` içinde, telefona taşıma planı `TELEFON_PLANI
 ```
 index.html            uygulama ve script listesi
 css/style.css         görünüm (koyu tema)
-js/storage.js         kayıt katmanı: sürücüler (tarayıcı, dosya; bulut buraya eklenecek), sürüm dönüştürücüleri
+js/storage.js         kayıt katmanı: sürücüler (tarayıcı, dosya; bulut js/senkron.js'te), sürüm dönüştürücüleri (veri sürümü 2), Cihaz ayarları
 js/srs.js             aralıklı tekrar (kutular: 0, 10 dk, 1, 3, 7, 16, 35 gün)
 js/puan.js            cevap günlüğü, 1-2-3 zorluk, zorluk raporu, TUR_ADI (soru türü adları)
 js/alistirmalar.js    soru türleri, ünite alıştırması / sınav / tekrar oturumu üreticileri
@@ -62,7 +62,7 @@ cumle-hazirlik.js     `node cumle-hazirlik.js` → hazirlik/cumle-grup-1..6.md (
 ## Yayın (GitHub Pages)
 - Depo: https://github.com/bnoktak/ispanyolca (herkese açık) · Site: https://bnoktak.github.io/ispanyolca/ (`main` dalı, kök klasör)
 - `.gitignore` ilerleme dosyalarını (`ilerleme*.json`, `yedekler/`) dışarıda tutar; commit öncesi `git status` ile kontrol et.
-- Akış: claude.ai'dan gelen içerik dosyasını `icerik/` içine kopyala → `node denetim.js` "Temiz" → commit (Türkçe, kısa) → `git push`. Site 1–2 dakikada güncellenir.
+- Akış: içerik değişikliği (claude.ai'dan gelen dosya ya da burada yazılan) → `node denetim.js` "Temiz" → commit (Türkçe, kısa) → `git push`. Site 1–2 dakikada güncellenir.
 - Commit kimliği: `bk` / `bnoktak@users.noreply.github.com`. Push, Claude Code'un kendi kabuğunda giriş isteyemez; giriş gerekirse Terminal panelinde çalıştır.
 - `.nojekyll`: GitHub'ın Jekyll işlemesini kapatır, silinmemeli.
 - Sürüm kancası: her commit'te `sw.js` SURUM etiketi değişir, telefon yeni sürümü indirip şerit gösterir. Format sonrası depoyu indirince bir kez `git config core.hooksPath .githooks` çalıştır.
@@ -70,4 +70,6 @@ cumle-hazirlik.js     `node cumle-hazirlik.js` → hazirlik/cumle-grup-1..6.md (
 ## Kullanıcı hakkında
 - Windows kullanıyor, iPhone'u var, Mac'i yok.
 - Uygulamayı Vivaldi (Chromium) ile açıyor.
-- Şu an 5. ünite civarında; ilerlemesini sıfırlayıp baştan başladı.
+- 13 Kasım 2026'da ilerlemesini (iki cihazda) sıfırlayıp Ünite 1'den yeniden başladı.
+- İki cihaz kullanıyor (bilgisayar + iPhone), senkron ikisinde de bağlı; iPhone'da uygulama ana ekranda, Scriptable widget'ı ana ekranda (kilit ekranı widget'ını istemedi: çok küçük).
+- İçeriği (örn. kelime cümleleri) claude.ai yerine burada yazdırmayı tercih etti.
