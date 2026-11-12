@@ -33,7 +33,7 @@ function kelimeGeciyor(k, cumle) {
     const bicim = new Set([w, w + 's', w + 'es', w.replace(/o$/, 'a'), w.replace(/o$/, 'as'), w.replace(/z$/, 'ces')]);
     const fiil = /(ar|er|ir)(se)?$/.test(w) ? w.replace(/se$/, '') : null;
     if (fiil) {
-      tumCekimler.filter(x => norm(x.fiil).trim() === fiil).forEach(x => ['yo', 'tu', 'el', 'nos', 'ellos'].forEach(y => x[y] && norm(x[y]).trim().split(/\s+/).forEach(f => bicim.add(f))));
+      tumCekimler.filter(x => [fiil, w].includes(norm(x.fiil).trim())).forEach(x => ['yo', 'tu', 'el', 'nos', 'ellos'].forEach(y => x[y] && norm(x[y]).trim().split(/\s+/).forEach(f => bicim.add(f))));
       const kok = fiil.slice(0, -2), t = fiil.slice(-2);
       (t === 'ar' ? ['o', 'as', 'a', 'amos', 'an'] : t === 'er' ? ['o', 'es', 'e', 'emos', 'en'] : ['o', 'es', 'e', 'imos', 'en']).forEach(e => bicim.add(kok + e));
     }
