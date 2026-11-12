@@ -152,8 +152,8 @@
           <span class="adim-ad">Karışık alıştırma<small>${Alistirma.alistirmaSayisi(u)} soru, her türden · ${ilr.adimlar.alistirma ? 'tamamlandı' : 'bitirince sınav açılır'}</small></span><span>›</span></button>
         <button class="adim" data-mod="eslestir"><span class="adim-emoji">🧩</span>
           <span class="adim-ad">Toplu eşleştirme<small>${u.kelimeler.length} kelimenin hepsi, grup grup</small></span><span>›</span></button>
-        <button class="adim" data-mod="es"><span class="adim-emoji">✍️</span>
-          <span class="adim-ad">Türkçe → İspanyolca yaz<small>${yazilir} kelime, grup grup</small></span><span>›</span></button>
+        ${Cihaz.telefon() ? '' : `<button class="adim" data-mod="es"><span class="adim-emoji">✍️</span>
+          <span class="adim-ad">Türkçe → İspanyolca yaz<small>${yazilir} kelime, grup grup</small></span><span>›</span></button>`}
       </div>
       <p class="aciklama">Mini sınavı açmak için karışık alıştırmayı bir kez bitirmen yeterli. Toplu çalışmalar istediğin kadar tekrar edilebilir ve tekrar listeni de günceller.</p>`;
     kok.querySelector('.geri').addEventListener('click', () => uniteEkrani(uid));
@@ -405,6 +405,7 @@
       if (alan && alan._temizle) alan._temizle();
       if (i >= liste.length) { kok.classList.remove('sinav-modu'); return bitince(dogru, liste.length, kayitlar); }
       kok.classList.toggle('sinav-modu', !!sinav);
+      kok.style.removeProperty('--gb');
       kok.innerHTML = `
         <header class="ust"><button class="ikon geri" title="Çık">×</button>
           <div class="ilerleme"><div style="width:${(i / liste.length) * 100}%"></div></div><span class="sayac">${i + 1}/${liste.length}</span></header>
@@ -455,6 +456,10 @@
       const td = g.querySelector('.tekrar-dinle'); if (td) td.addEventListener('click', () => Ses.oku(s.oku));
       const devam = g.querySelector('.devam');
       setTimeout(() => devam.focus(), 30);
+      // 📱 telefonda şıklar ekranın altında: geri bildirim paneli onları örtmesin diye içerik panel kadar yukarı kalkar
+      kok.style.setProperty('--gb', g.offsetHeight + 'px');
+      // soru uzunsa sayfa panelin boyu kadar uzar: en alta kaydır ki işaretlenen şık panelin üstünde görünsün
+      if (document.body.classList.contains('telefon')) requestAnimationFrame(() => scrollTo(0, document.documentElement.scrollHeight));
       const git = () => { tusAyarla(null); Ses.dur(); i++; goster(); };
       devam.addEventListener('click', git);
       tusAyarla((e) => {
@@ -715,6 +720,23 @@
           ${gruplar.map((g) => g.sutunlar.map((c, i) => hucre(c, x).replace('<td class="', `<td class="${i === 0 ? 'grup-ilk ' : ''}`)).join('')).join('')}
           ${fiiller.map((f, i) => `<td class="es ${i === 0 ? 'grup-ilk' : ''}">${sesli(f[x.k])}</td>`).join('')}</tr>`).join('')}
       </table></div></section>` : '';
+    // 2a) 📱 KİŞİ KARTI (telefon için): üstte kişi düğmeleri, seçilen kişinin zamiri, sahipliği ve tüm fiil çekimleri alt alta
+    const gorunum = Cihaz.al('ozetGorunum') || (Cihaz.telefon() ? 'kartlar' : 'tablo');
+    const kisiKartHtml = (secK) => {
+      const x = kisiler.find((y) => y.k === secK) || kisiler[0];
+      const grupHtml = gruplar.map((g) => {
+        const satirlar = g.sutunlar.filter((c) => c[x.k] && acikMi(c[x.k][1]))
+          .map((c) => `<tr><td class="${c.tr ? '' : 'tr'}">${esc(c.ad)}</td><td class="${c.tr ? 'tr' : 'es'}">${c.tr ? satirli(c[x.k][0]) : sesli(c[x.k][0])}</td></tr>`).join('');
+        return satirlar ? `<h5>${g.baslik}</h5><table class="ozet-tablo">${satirlar}</table>` : '';
+      }).join('');
+      const fiilHtml = fiiller.length ? `<h5>🔧 Fiiller (şimdiki zaman)</h5><table class="ozet-tablo">
+        ${fiiller.map((f) => `<tr><td class="es">${sesli(f.fiil)}<br><small class="fiil-tr">${esc(f.tr)} · Ü${sira(f.uid)}</small></td><td class="es">${f[x.k] ? sesli(f[x.k]) : '–'}</td></tr>`).join('')}</table>` : '';
+      return `<div class="kisi-dugmeler">${kisiler.map((y) => `<button type="button" data-kisi="${y.k}" class="${y === x ? 'secili' : ''}">${esc(y.es.split('\n')[0].split(' / ')[0])}</button>`).join('')}</div>
+        <div class="zamir">${sesli(x.es)}<small>${satirli(x.tr)}</small></div>${grupHtml}${fiilHtml}`;
+    };
+    const kisiBolum = !kisiler.length ? '' : gorunum === 'kartlar'
+      ? `<section class="kutu ozet-kutu kisi-kart"><h3>🧑 Kişilere göre: zamir, sahiplik, fiiller</h3><div id="kisi-kart">${kisiKartHtml(Cihaz.al('ozetKisi'))}</div></section>`
+      : kisiHtml;
     // 2b) her fiille bir soru–cevap (kişi tablosunun hemen altında)
     // bir fiilin tek örneği [..] ya da birden fazla örneği [[..], [..]] olabilir
     const fiilOrn = fiiller.flatMap((f) => { const v = ORN.fiil[f.fiil]; if (!v) return []; return (Array.isArray(v[0]) ? v : [v]).filter((o) => acikMi(o[2])).map((o) => ({ f, o })); });
@@ -740,12 +762,25 @@
     kok.innerHTML = `
       <header class="ust"><button class="ikon geri">←</button><div class="ust-baslik">📚 Özet tablolar</div><span></span></header>
       <p class="aciklama">Ünite ${acikSira}’e kadar öğrendiklerin. Yeni ünite açtıkça tablolar büyür. <b>Ü</b> = öğretildiği ünite.</p>
-      ${kisiHtml}${sahipHtml}${fiilOrnHtml}${tablolar}${kelimeHtml}`;
+      ${kisiler.length ? `<div class="gorunum-sec"><button type="button" data-gorunum="tablo" class="${gorunum === 'tablo' ? 'secili' : ''}">📊 Tablo</button><button type="button" data-gorunum="kartlar" class="${gorunum === 'kartlar' ? 'secili' : ''}">👤 Kartlar</button></div>` : ''}
+      ${kisiBolum}${sahipHtml}${fiilOrnHtml}${tablolar}${kelimeHtml}`;
     kok.classList.add('genis');
     kok.querySelector('.geri').addEventListener('click', () => { kok.classList.remove('genis'); anaEkran(); });
-    kok.querySelectorAll('.oku').forEach((b) => b.addEventListener('click', () => {
+    const okuBagla = (kapsam) => kapsam.querySelectorAll('.oku').forEach((b) => b.addEventListener('click', () => {
       Ses.oku(b.dataset.ses); b.classList.add('caliyor'); setTimeout(() => b.classList.remove('caliyor'), 700);
     }));
+    okuBagla(kok);
+    // Tablo | Kartlar geçişi (son seçim bu cihazda hatırlanır)
+    kok.querySelectorAll('[data-gorunum]').forEach((b) => b.addEventListener('click', () => {
+      if (b.dataset.gorunum === gorunum) return;
+      Cihaz.koy('ozetGorunum', b.dataset.gorunum); const y = scrollY; ozetEkrani(); scrollTo(0, y);
+    }));
+    // kişi düğmeleri: yalnızca kart yeniden çizilir (sayfa kaymaz)
+    const kisiBagla = () => kok.querySelectorAll('[data-kisi]').forEach((b) => b.addEventListener('click', () => {
+      Cihaz.koy('ozetKisi', b.dataset.kisi);
+      const kart = kok.querySelector('#kisi-kart'); kart.innerHTML = kisiKartHtml(b.dataset.kisi); okuBagla(kart); kisiBagla();
+    }));
+    kisiBagla();
     const ara = kok.querySelector('.ozet-ara');
     ara.addEventListener('input', () => {
       const q = ara.value.trim().toLocaleLowerCase('tr');

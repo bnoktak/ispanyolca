@@ -918,8 +918,9 @@
       if (t === 'sec_es') return this.sec(this._tek(kel, t), 'es');
       if (t === 'sec_tr') return this.sec(this._tek(kel, t), 'tr');
       if (t === 'yaz') return this.yazVeya(this._tek(yazilir, t));
-      if (t === 'eslestir') return this.eslestir(this._taze(kel, 5, t));
-      if (t === 'sureli') return this.eslestir(this._taze(kel, 6, t), 40);
+      // telefonda ekrana sığsın diye bir çift az: 4 / süreli 5
+      if (t === 'eslestir') return this.eslestir(this._taze(kel, telefon() ? 4 : 5, t));
+      if (t === 'sureli') return this.eslestir(this._taze(kel, telefon() ? 5 : 6, t), 40);
       if (t === 'cumle') return this.cumle(this.cumleSec(unite, t), this.cumleHavuzu(unite));
       if (t === 'bosluk') return this.bosluk(this._tek(bos, t));
       if (t === 'dinle_sec') return this.dinle(this._tek(yazilir, t), 'sec');

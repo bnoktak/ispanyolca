@@ -418,6 +418,39 @@ input, select, textarea { font-size: max(16px, 1em); }
   padding-left: calc(16px + env(safe-area-inset-left));
   padding-right: calc(16px + env(safe-area-inset-right));
 }
+/* ---------- 📱 Telefon modu: tek elle kullanım (body.telefon) ---------- */
+/* alıştırma ekranı ekran boyu kadar uzar; şıklar, taşlar ve "Kontrol et" başparmağın yetiştiği alta toplanır */
+body.telefon #uygulama:has(> main.alistirma) { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+body.telefon .alistirma { display: flex; flex-direction: column;
+  min-height: calc(100vh - 128px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: calc(100dvh - 128px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  padding-bottom: var(--gb, 0px); }          /* --gb: geri bildirim paneli açıkken yüksekliği (app.js) */
+body.telefon .alistirma > .siklar, body.telefon .alistirma > .taslar, body.telefon .alistirma > .eslestir { margin-top: auto; }
+body.telefon .alistirma > .taslar { margin-bottom: 14px; }
+body.telefon .sik { min-height: 56px; font-size: 18px; }
+body.telefon .sik .no { display: none; }                      /* klavye numaraları telefonda gereksiz */
+body.telefon .aksanlar { display: none; }                     /* iPhone klavyesinde harfe basılı tutarak yazılıyor */
+body.telefon .alistirma .ana-buton, body.telefon .geribildirim .ana-buton { min-height: 56px; font-size: 18px; }
+body.telefon .tas { min-height: 48px; }
+body.telefon .kart-k { min-height: 56px; }
+/* geri bildirim: alt alta, "Devam" tam genişlik, 1-2-3 büyük */
+body.telefon .geribildirim { flex-direction: column; align-items: stretch; gap: 10px; }
+body.telefon .geribildirim .devam { width: 100%; }
+body.telefon .puanla { gap: 8px; font-size: 15px; }
+body.telefon .puanla span { width: 100%; }
+body.telefon .puanla button { flex: 1; min-height: 46px; font-size: 16px; font-weight: 600; opacity: .9; }
+/* özet: kişi kartları */
+.gorunum-sec { display: flex; gap: 6px; background: var(--kart); border-radius: 999px; padding: 4px; margin: 0 0 14px; width: fit-content; }
+.gorunum-sec button { padding: 8px 16px; border-radius: 999px; font-weight: 700; color: var(--soluk); }
+.gorunum-sec button.secili { background: var(--ana); color: #fff; }
+.kisi-dugmeler { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+.kisi-dugmeler button { flex: 1; background: var(--zemin); border: 2px solid var(--cizgi); border-radius: 12px; padding: 8px 4px; font-weight: 700; min-height: 44px; }
+.kisi-dugmeler button.secili { border-color: var(--ana); color: var(--ana); }
+.kisi-kart .zamir { font-size: 22px; font-weight: 800; color: var(--ana); margin: 4px 0 2px; }
+.kisi-kart .zamir small { display: block; font-size: 15px; font-weight: 500; color: var(--soluk); }
+.kisi-kart h5 { margin: 14px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--soluk); }
+.kisi-kart .ozet-tablo td:first-child { width: 50%; }
+
 /* 🔄 Yeni sürüm şeridi (js/pwa.js) */
 .surum-serit { position: fixed; z-index: 50; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top));
   display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 999px;
