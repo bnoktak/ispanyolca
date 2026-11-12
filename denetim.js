@@ -27,7 +27,9 @@ function kelimeGeciyor(k, cumle) {
   return k.es.split(' / ').some((alt) => {
     const w = norm(alt).replace(/^\s*(el|la|los|las|un|una)\s+/, '').trim().split(/\s+/).join(' ');
     if (!w) return false;
-    if (w.includes(' ')) return c.includes(' ' + w + ' ');
+    // "al lado de" ↔ "al lado del": del = de + el, al = a + el (zorunlu kısaltmalar)
+    const ac = (s) => s.replace(/ del /g, ' de el ').replace(/ al /g, ' a el ');
+    if (w.includes(' ')) return c.includes(' ' + w + ' ') || ac(c).includes(ac(' ' + w + ' '));
     const bicim = new Set([w, w + 's', w + 'es', w.replace(/o$/, 'a'), w.replace(/o$/, 'as'), w.replace(/z$/, 'ces')]);
     const fiil = /(ar|er|ir)(se)?$/.test(w) ? w.replace(/se$/, '') : null;
     if (fiil) {
