@@ -18,6 +18,7 @@
 
   const GIST_ACIKLAMA = 'ispanyolca-ilerleme · ¡Hola! İspanyolca uygulamasının senkron dosyası';
   const DOSYA = 'ilerleme.json';
+  const WIDGET_DOSYA = 'widget.json';     // iPhone widget'ının okuduğu öğrenilen kelimeler (js/widget.js)
   const BOSTA_BEKLE = 20000;
   // her cihazda kendi değeri kalan ayarlar (Windows ile iPhone'un sesleri farklı)
   const YEREL_AYARLAR = ['sonYedek', 'ses', 'sesAdi', 'sesHiz', 'otoOku'];
@@ -139,10 +140,16 @@
     },
     async olustur(veri) {
       const g = await this.istek('/gists', { method: 'POST', body: JSON.stringify({ description: GIST_ACIKLAMA, public: false, files: { [DOSYA]: { content: JSON.stringify(veri) } } }) });
+      if (g.owner && g.owner.login) Cihaz.koy('gistSahip', g.owner.login);
       return g.id;
     },
+    uzakWidgetImza: null,     // Gist'teki widget.json'un imzası (değişmediyse yeniden yazılmaz)
     async oku() {
       const g = await this.istek('/gists/' + this.gistId());
+      // widget'ın okuyacağı adres için Gist sahibinin kullanıcı adı
+      if (g.owner && g.owner.login && Cihaz.al('gistSahip') !== g.owner.login) Cihaz.koy('gistSahip', g.owner.login);
+      const w = g.files && g.files[WIDGET_DOSYA];
+      try { this.uzakWidgetImza = w && w.content ? JSON.parse(w.content).imza || null : null; } catch (e) { this.uzakWidgetImza = null; }
       const f = g.files && g.files[DOSYA];
       if (!f) return null;
       let metin = f.content;
@@ -151,8 +158,14 @@
       }
       try { return JSON.parse(metin); } catch (e) { throw new SenkronHatasi('bozuk', 'Buluttaki dosya okunamadı'); }
     },
-    async yaz(veri) {
-      await this.istek('/gists/' + this.gistId(), { method: 'PATCH', body: JSON.stringify({ files: { [DOSYA]: { content: JSON.stringify(veri) } } }) });
+    // veri: ilerleme (yazılmayacaksa null) · widget: widget.json (yazılmayacaksa null)
+    async yaz(veri, widget) {
+      const files = {};
+      if (veri) files[DOSYA] = { content: JSON.stringify(veri) };
+      if (widget) files[WIDGET_DOSYA] = { content: JSON.stringify(widget) };
+      if (!Object.keys(files).length) return;
+      await this.istek('/gists/' + this.gistId(), { method: 'PATCH', body: JSON.stringify({ files }) });
+      if (widget) this.uzakWidgetImza = widget.imza;
     }
   };
 
@@ -193,7 +206,7 @@
       await this.esitle('bagla');
       if (this.hata) throw new SenkronHatasi(this.hata.kod, this.hata.message);
     },
-    kes() { Cihaz.koy('gistAnahtar', undefined); Cihaz.koy('gistId', undefined); Cihaz.koy('senkronSon', undefined); this.hata = null; this._bildir(); },
+    kes() { ['gistAnahtar', 'gistId', 'gistSahip', 'senkronSon'].forEach((k) => Cihaz.koy(k, undefined)); this.hata = null; this._bildir(); },
 
     async esitle(neden) {
       if (!this.bagliMi()) return false;
@@ -208,7 +221,10 @@
         const birlesik = birlestir(Depo.veri, uzak, window.Puan ? Puan.SINIR : 4000);
         if (!ayniMi(birlesik, Depo.veri)) { Depo.veri = birlesik; degisti = true; }
         if (degisti) await Depo._yazHepsi();
-        if (!uzak || !ayniMi(Depo.veri, uzak)) await BulutSurucusu.yaz(Depo.veri);
+        // 📲 widget.json: öğrenilen kelimeler değiştiyse ilerlemeyle aynı yazmada gider
+        const widget = window.Widget ? Widget.veri() : null;
+        const ilerlemeYaz = !uzak || !ayniMi(Depo.veri, uzak), widgetYaz = !!widget && widget.imza !== BulutSurucusu.uzakWidgetImza;
+        if (ilerlemeYaz || widgetYaz) await BulutSurucusu.yaz(ilerlemeYaz ? Depo.veri : null, widgetYaz ? widget : null);
         Cihaz.koy('senkronSon', Date.now());
         this.hata = null;
       } catch (e) {

@@ -404,36 +404,13 @@
   /* =========================================================
      🃏 MİNİ KART: öğrenilen kelimelerden rastgele kelime + örnek cümle.
      Sadece göz atmak için, ilerlemeyi ve tekrar listesini ETKİLEMEZ.
-     Adres: index.html#mini ya da #mini=<kelimeId> (widget bu adresle açar)
+     Adres: index.html#mini ya da #mini=<kelimeId>. Kelime ve cümle seçimi js/widget.js'te (widget ile ortak).
      ========================================================= */
-  // Öğrenilen kelimeler: kartı görülmüş (tekrar listesinde) kelimeler; harf kartları hariç
-  function ogrenilenKelimeler() {
-    return Object.keys(Depo.veri.kelimeler).map((id) => ICERIK.kelime(id)).filter((k) => k && k.yazma !== false);
-  }
-  const cumleNormal = (s) => ' ' + String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .replace(/[¿?¡!.,;:"“”…—()]/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
-  // Kelimenin örnek cümlesi: önce claude.ai'da hazırlanan ICERIK.kelimeCumleleri, yoksa
-  // kartı görülmüş ünitelerin cümlelerinden kelimeyi içeren kısa bir cümle (öğretilmemiş kelime çıkmaz)
-  const _cumleBellek = new Map();
-  function kelimeCumlesi(k) {
-    const hazir = ICERIK.kelimeCumleleri && ICERIK.kelimeCumleleri[k.id];
-    if (hazir) return { es: hazir[0], tr: hazir[1] };
-    if (!_cumleBellek.has(k.id)) {
-      const gorulen = (u) => u.id === k.unite || (!u.ek && ((Depo.veri.uniteler[u.id] || {}).adimlar || {}).kart);
-      const bicimler = k.es.split(' / ').map((x) => cumleNormal(x.replace(/^(el|la|los|las|un|una) /i, ''))).filter((b) => b.trim().length > 1);
-      const adaylar = [...ICERIK.uniteler, ...ICERIK.ekler].filter(gorulen).flatMap((u) => u.cumleler || [])
-        .filter((c) => !c.es.includes('—') && c.es.split(' ').length <= 9 && bicimler.some((b) => cumleNormal(c.es).includes(b)));
-      _cumleBellek.set(k.id, adaylar);
-    }
-    const a = _cumleBellek.get(k.id);
-    return a.length ? a[Math.floor(Math.random() * a.length)] : null;
-  }
-
   function miniKart(baslangicId) {
     tusAyarla(null); Ses.dur();
     const cik = () => { Ses.dur(); if (location.hash) history.replaceState(null, '', location.pathname + location.search); anaEkran(); };
     const baslik = `<header class="ust"><button class="ikon geri" title="Ana ekran">←</button><div class="ust-baslik">🃏 Mini kart</div><span></span></header>`;
-    const liste = ogrenilenKelimeler();
+    const liste = Widget.ogrenilenler();
     if (!liste.length) {
       kok.innerHTML = `${baslik}<div class="bant">Henüz öğrendiğin kelime yok. İlk ünitenin kartlarını bitirince kelimeler burada görünür.</div>`;
       kok.querySelector('.geri').addEventListener('click', cik);
@@ -446,7 +423,7 @@
     const cumleler = new Map();     // aynı kelimeye geri dönünce aynı cümle görünsün
     function ciz() {
       const k = sira[i];
-      if (!cumleler.has(k.id)) cumleler.set(k.id, kelimeCumlesi(k));
+      if (!cumleler.has(k.id)) cumleler.set(k.id, Widget.cumle(k));
       const c = cumleler.get(k.id);
       const sesli = Ses.aktif();
       kok.innerHTML = `${baslik}
@@ -695,6 +672,7 @@
         <p class="aciklama" id="yedek-not">${Depo.sonHata ? '⚠️ Son yazma başarısız: ' + esc(Depo.sonHata.message || '') : ''}</p>
       </section>
       <section class="kutu" id="senkron-kutu">${senkronKutusu()}</section>
+      ${Senkron.bagliMi() ? `<section class="kutu" id="widget-kutu">${widgetKutusu()}</section>` : ''}
       <section class="kutu">
         <h3>📊 Zorluk puanları</h3>
         <label class="satir"><input type="checkbox" id="puanlama" ${puanlamaAcik() ? 'checked' : ''}> Alıştırmalarda her cevaptan sonra <b>1 kolay · 2 orta · 3 zor</b> düğmelerini göster</label>
@@ -772,7 +750,7 @@
       if (!confirm(`Tüm ilerleme silinsin mi? Bu geri alınamaz.${Senkron.bagliMi() ? '\n\nSenkron açık: öbür cihazlarda da sıfırlanır.' : ''}`)) return;
       await Depo.sifirla(); Senkron.zamanla(0); anaEkran();
     });
-    senkronBagla();
+    senkronBagla(); widgetBagla();
   }
 
   /* ---------- ☁️ Senkron (Ayarlar içinde) ---------- */
@@ -800,6 +778,37 @@
       </details>
       <p class="aciklama" id="senkron-not">${Senkron.hata ? '⚠️ ' + esc(Senkron.hata.message) : ''}</p>`;
   }
+  /* ---------- 📲 iPhone widget kurulumu (Ayarlar içinde, senkron bağlıysa) ---------- */
+  function widgetKutusu() {
+    const kod = Widget.yukleyici();
+    if (!kod) return `<h3>📲 iPhone widget'ı</h3><p class="aciklama">İlk eşitleme bitince burada kurulum kodu görünür. Ayarlar'dan çıkıp tekrar gir.</p>`;
+    return `<h3>📲 iPhone widget'ı (kilit ekranı / ana ekran)</h3>
+      <p class="aciklama">Öğrendiğin kelimelerden rastgele biri, örnek cümlesiyle kilit ekranında görünür. Dokununca kelime kartı açılır (← Önceki / Geç →). Kelime listesi senkronla güncellenir.</p>
+      <details class="detay"><summary>Kurulum (bir kez, iPhone'da)</summary>
+        <ol class="aciklama">
+          <li>App Store'dan <b>Scriptable</b>'ı kur (ücretsiz).</li>
+          <li>Aşağıdaki <b>Kodu kopyala</b>'ya bas.</li>
+          <li>Scriptable → sağ üstte <b>+</b> → kodu yapıştır → üstteki adı <b>İspanyolca</b> yap → <b>Done</b>.</li>
+          <li>Betiğe bir kez dokunup çalıştır: kelime kartı açılmalı.</li>
+          <li><b>Kilit ekranı:</b> kilit ekranına basılı tut → <b>Özelleştir</b> → Kilit Ekranı → saatin altındaki alana dokun → <b>Scriptable</b> → dikdörtgen widget'ı ekle → widget'a dokun → Script: <b>İspanyolca</b>, When Interacting: <b>Run Script</b>.</li>
+          <li><b>Ana ekran</b> (isteğe bağlı): boş bir yere basılı tut → <b>+</b> → Scriptable → küçük ya da orta → aynı ayarlar.</li>
+          <li>Türkçesi de görünsün istersen widget ayarında <b>Parameter</b> kutusuna <code>tr</code> yaz.</li>
+        </ol>
+        <p class="aciklama">Widget'ın ne sıklıkla yenileneceğine iOS karar verir (genelde 15–30 dakikada bir). Kod kendiliğinden güncellenir; yeniden kopyalaman gerekmez.</p>
+      </details>
+      <textarea class="widget-kod" readonly rows="5">${esc(kod)}</textarea>
+      <button class="ana-buton" id="widget-kopyala">📋 Kodu kopyala</button>
+      <p class="aciklama" id="widget-not"></p>`;
+  }
+  function widgetBagla() {
+    const b = kok.querySelector('#widget-kopyala'); if (!b) return;
+    b.addEventListener('click', async () => {
+      const alan = kok.querySelector('.widget-kod'), not = kok.querySelector('#widget-not');
+      try { await navigator.clipboard.writeText(alan.value); not.textContent = '✓ Kopyalandı. Şimdi Scriptable\'a yapıştır.'; }
+      catch (e) { alan.focus(); alan.select(); try { document.execCommand('copy'); not.textContent = '✓ Kopyalandı.'; } catch (e2) { not.textContent = 'Kopyalanamadı: kutudaki metni seçip elle kopyala.'; } }
+    });
+  }
+
   function senkronBagla() {
     const kutu = kok.querySelector('#senkron-kutu'); if (!kutu) return;
     const yenile = () => { kutu.innerHTML = senkronKutusu(); senkronBagla(); };
@@ -808,13 +817,13 @@
     const kes = kutu.querySelector('#senkron-kes');
     if (kes) kes.addEventListener('click', () => {
       if (!confirm('Bu cihazda senkron kapatılsın mı? İlerlemen bu cihazda kalır; anahtar bu cihazdan silinir.')) return;
-      Senkron.kes(); yenile();
+      Senkron.kes(); ayarlarEkrani();
     });
     const bagla = kutu.querySelector('#senkron-bagla');
     if (bagla) bagla.addEventListener('click', async () => {
       const girdi = kutu.querySelector('#senkron-anahtar'), not = kutu.querySelector('#senkron-not');
       bagla.disabled = true; not.textContent = '☁️ Bağlanıyor…';
-      try { await Senkron.bagla(girdi.value); girdi.value = ''; yenile(); }
+      try { await Senkron.bagla(girdi.value); girdi.value = ''; ayarlarEkrani(); }
       catch (e) { bagla.disabled = false; not.textContent = '⚠️ ' + (e.kod === 'ag' ? 'İnternete ulaşılamadı' : e.kod === 'anahtar' ? 'Anahtar geçersiz' : e.kod === 'yetki' ? 'Anahtarın Gist izni yok: "Gists: Read and write" iznini ver' : e.message); }
     });
   }
