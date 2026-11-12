@@ -1,0 +1,13 @@
+# Kişisel ilerleme: depoya (herkese açık) asla girmez
+ilerleme.json
+ilerleme.onceki.json
+yedekler/
+ispanyolca-yedek-*.json
+
+# Claude Code yerel ayarları
+.claude/settings.local.json
+
+# Sistem dosyaları
+Thumbs.db
+desktop.ini
+.DS_Store

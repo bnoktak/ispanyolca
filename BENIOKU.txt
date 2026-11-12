@@ -1,0 +1,35 @@
+¡HOLA! İSPANYOLCA — NASIL KULLANILIR
+====================================
+
+1) index.html dosyasına çift tıkla (Vivaldi, Chrome ya da Edge ile açılmalı).
+
+2) İlerlemen tarayıcıda tutulur, açılışta hiçbir izin sorulmaz.
+
+3) Harddiske kaydetmek için: ⚙️ Ayarlar → "💾 Harddiske kaydet".
+   İlk seferde açılan pencerede BU klasörü (ispanyolca) seç ve izin ver.
+   Klasöre ilerleme.json yazılır, ayrıca yedekler\ içine tarihli bir kopya konur.
+
+FORMAT ATMADAN ÖNCE
+-------------------
+⚙️ Ayarlar → "💾 Harddiske kaydet" de. Bu kadar.
+Format sonrası: uygulamayı aç → ⚙️ Ayarlar → "📂 Harddisten geri yükle"
+→ ispanyolca klasörünü seç. Kaldığın yerden devam edersin.
+
+KLAVYE KISAYOLLARI
+------------------
+Kartlar:     Boşluk = çevir · Enter/→ = sonraki kart · S = dinle
+Alıştırma:   1-4 = şık seç · Enter = kontrol et / devam · Boşluk = tekrar dinle (dinleme sorularında)
+Cevaptan sonra: 1 / 2 / 3 = bu soru kolay / orta / zor (isteğe bağlı)
+
+SESLİ OKUMA
+-----------
+Windows'un İspanyolca sesini kullanır. Ses yoksa: Windows Ayarlar → Saat ve dil →
+Konuşma → Sesleri yönet → Ses ekle → Español (México). Sonra tarayıcıyı kapatıp aç.
+Ayarlar (⚙️) → Sesli okuma bölümünden ses, hız ve otomatik okuma seçilir.
+
+ZORLUK PUANI VE RAPOR (v2.0)
+----------------------------
+Alıştırma ve tekrarda her cevaptan sonra "1 kolay · 2 orta · 3 zor" düğmeleri çıkar.
+Zor dediğin kelimeler tekrarda daha sık gelir. ⚙️ Ayarlar → 📊 Zorluk raporu:
+en zor sorular, soru türleri, üniteler. İçeriği bu verilere göre güncellemek için
+Harddiske kaydet ve ilerleme.json dosyasını Claude'a gönder.
