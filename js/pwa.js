@@ -24,15 +24,17 @@
     s.innerHTML = '<span>🔄 Yeni sürüm hazır</span><button type="button">Yenile</button>';
     s.querySelector('button').addEventListener('click', () => {
       s.querySelector('button').disabled = true;
+      yenilemeIstendi = true;
       bekleyen.postMessage('atla');
     });
     document.body.appendChild(s);
   }
 
-  // Yeni sürüm devreye girince bir kez yenile
-  let yenilendi = false;
+  // "Yenile"ye basıldıysa, yeni sürüm devreye girince bir kez yenile.
+  // (İlk kurulumda da controllerchange gelir; o zaman sayfa yenilenmemeli.)
+  let yenilemeIstendi = false, yenilendi = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (yenilendi) return; yenilendi = true; location.reload();
+    if (!yenilemeIstendi || yenilendi) return; yenilendi = true; location.reload();
   });
 
   function surumuSor() {
