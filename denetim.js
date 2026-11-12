@@ -25,6 +25,11 @@ const tumCekimler = [...ICERIK.uniteler, ...ICERIK.ekler].flatMap(u => u.cekimle
 function kelimeGeciyor(k, cumle) {
   const c = ' ' + norm(cumle).split(/\s+/).filter(Boolean).join(' ') + ' ';
   return k.es.split(' / ').some((alt) => {
+    // boşluklu kalıp ("¿cómo se dice… en español?"): parçaların her biri sırayla geçmeli
+    if (alt.includes('…') && alt.split('…').filter((p) => norm(p).trim()).length > 1) {
+      let i = 0;
+      return alt.split('…').map((p) => norm(p).trim().split(/\s+/).join(' ')).filter(Boolean).every((p) => { const j = c.indexOf(' ' + p + ' ', i); if (j < 0) return false; i = j + p.length; return true; });
+    }
     const w = norm(alt).replace(/^\s*(el|la|los|las|un|una)\s+/, '').trim().split(/\s+/).join(' ');
     if (!w) return false;
     // "al lado de" ↔ "al lado del": del = de + el, al = a + el (zorunlu kısaltmalar)
