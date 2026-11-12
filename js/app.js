@@ -89,6 +89,9 @@
       <button class="tekrar-buton ${ogrenilen ? '' : 'pasif'}" data-git="tekrar" ${ogrenilen ? '' : 'disabled'}>
         <span>🔁</span><div><b>Tekrar</b><small>${ogrenilen ? (bekleyen ? `${bekleyen} kelimenin tekrar zamanı geldi · çalıştığın tüm ünitelerden karışık` : 'Çalıştığın tüm ünitelerden karışık alıştırma') : 'İlk ünitenin kartlarını bitirince açılır'}</small></div>
       </button>
+      <button class="tekrar-buton ozet-buton mini-buton ${ogrenilen ? '' : 'pasif'}" data-git="mini" ${ogrenilen ? '' : 'disabled'}>
+        <span>🃏</span><div><b>Mini kart</b><small>${ogrenilen ? 'Öğrendiğin kelimelere örnek cümleleriyle göz at · ilerlemeyi etkilemez' : 'İlk ünitenin kartlarını bitirince açılır'}</small></div>
+      </button>
       <button class="tekrar-buton ozet-buton" data-git="ozet">
         <span>📚</span><div><b>Özet tablolar</b><small>Zamirler, artikeller, fiil çekimleri ve açtığın ünitelere kadar tüm kelimeler</small></div>
       </button>
@@ -103,6 +106,7 @@
     kok.querySelectorAll('[data-git="ayarlar"]').forEach((b) => b.addEventListener('click', ayarlarEkrani));
     kok.querySelectorAll('[data-git="tekrar"]').forEach((b) => b.addEventListener('click', tekrarBaslat));
     kok.querySelectorAll('[data-git="ozet"]').forEach((b) => b.addEventListener('click', () => ozetEkrani()));
+    kok.querySelectorAll('[data-git="mini"]').forEach((b) => b.addEventListener('click', () => miniKart()));
     kok.querySelectorAll('[data-unite]').forEach((b) => b.addEventListener('click', () => uniteEkrani(b.dataset.unite)));
   }
 
@@ -396,6 +400,101 @@
     }
     ciz();
   }
+
+  /* =========================================================
+     🃏 MİNİ KART: öğrenilen kelimelerden rastgele kelime + örnek cümle.
+     Sadece göz atmak için, ilerlemeyi ve tekrar listesini ETKİLEMEZ.
+     Adres: index.html#mini ya da #mini=<kelimeId> (widget bu adresle açar)
+     ========================================================= */
+  // Öğrenilen kelimeler: kartı görülmüş (tekrar listesinde) kelimeler; harf kartları hariç
+  function ogrenilenKelimeler() {
+    return Object.keys(Depo.veri.kelimeler).map((id) => ICERIK.kelime(id)).filter((k) => k && k.yazma !== false);
+  }
+  const cumleNormal = (s) => ' ' + String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[¿?¡!.,;:"“”…—()]/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
+  // Kelimenin örnek cümlesi: önce claude.ai'da hazırlanan ICERIK.kelimeCumleleri, yoksa
+  // kartı görülmüş ünitelerin cümlelerinden kelimeyi içeren kısa bir cümle (öğretilmemiş kelime çıkmaz)
+  const _cumleBellek = new Map();
+  function kelimeCumlesi(k) {
+    const hazir = ICERIK.kelimeCumleleri && ICERIK.kelimeCumleleri[k.id];
+    if (hazir) return { es: hazir[0], tr: hazir[1] };
+    if (!_cumleBellek.has(k.id)) {
+      const gorulen = (u) => u.id === k.unite || (!u.ek && ((Depo.veri.uniteler[u.id] || {}).adimlar || {}).kart);
+      const bicimler = k.es.split(' / ').map((x) => cumleNormal(x.replace(/^(el|la|los|las|un|una) /i, ''))).filter((b) => b.trim().length > 1);
+      const adaylar = [...ICERIK.uniteler, ...ICERIK.ekler].filter(gorulen).flatMap((u) => u.cumleler || [])
+        .filter((c) => !c.es.includes('—') && c.es.split(' ').length <= 9 && bicimler.some((b) => cumleNormal(c.es).includes(b)));
+      _cumleBellek.set(k.id, adaylar);
+    }
+    const a = _cumleBellek.get(k.id);
+    return a.length ? a[Math.floor(Math.random() * a.length)] : null;
+  }
+
+  function miniKart(baslangicId) {
+    tusAyarla(null); Ses.dur();
+    const cik = () => { Ses.dur(); if (location.hash) history.replaceState(null, '', location.pathname + location.search); anaEkran(); };
+    const baslik = `<header class="ust"><button class="ikon geri" title="Ana ekran">←</button><div class="ust-baslik">🃏 Mini kart</div><span></span></header>`;
+    const liste = ogrenilenKelimeler();
+    if (!liste.length) {
+      kok.innerHTML = `${baslik}<div class="bant">Henüz öğrendiğin kelime yok. İlk ünitenin kartlarını bitirince kelimeler burada görünür.</div>`;
+      kok.querySelector('.geri').addEventListener('click', cik);
+      return;
+    }
+    const karistir = Alistirma.karistir;
+    const ilk = baslangicId && ICERIK.kelime(baslangicId);
+    let sira = ilk ? [ilk, ...karistir(liste.filter((k) => k.id !== ilk.id))] : karistir(liste);
+    let i = 0;
+    const cumleler = new Map();     // aynı kelimeye geri dönünce aynı cümle görünsün
+    function ciz() {
+      const k = sira[i];
+      if (!cumleler.has(k.id)) cumleler.set(k.id, kelimeCumlesi(k));
+      const c = cumleler.get(k.id);
+      const sesli = Ses.aktif();
+      kok.innerHTML = `${baslik}
+        <div class="flip mini" tabindex="0"><div class="flip-ic">
+          <div class="yuz on"><span class="es">${esc(k.es)}</span>${sesli && Ses.okunurMu(k) ? '<button type="button" class="ses kart-ses" data-oku="kelime" title="Dinle (S)">🔊</button>' : ''}
+            ${c ? `<p class="mini-cumle">${esc(c.es)}${sesli ? ' <button type="button" class="ses mini-ses" data-oku="cumle" title="Cümleyi dinle">🔊</button>' : ''}</p>` : ''}
+            <small>Türkçesi için dokun</small></div>
+          <div class="yuz arka"><span>${esc(k.tr)}</span>${k.en && ingilizce() ? `<span class="en">🇬🇧 ${esc(k.en)}</span>` : ''}
+            ${c ? `<p class="mini-cumle">${esc(c.tr)}</p>` : ''}</div>
+        </div></div>
+        <div class="kart-butonlar"><button class="ikinci-buton onceki" ${i ? '' : 'disabled'}>← Önceki</button><button class="ana-buton gec">Geç →</button></div>
+        <p class="aciklama mini-not">Öğrendiğin ${liste.length} kelimeden rastgele · ilerlemeni etkilemez</p>`;
+      const flip = kok.querySelector('.flip');
+      let cevrik = false;
+      const cevir = () => { cevrik = !cevrik; flip.classList.toggle('cevrik', cevrik); };
+      const oku = (ne) => { if (ne === 'cumle' && c) Ses.oku(c.es); else if (Ses.okunurMu(k)) Ses.oku(k.es); };
+      kok.querySelectorAll('[data-oku]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); oku(b.dataset.oku); }));
+      flip.addEventListener('click', cevir);
+      kok.querySelector('.gec').addEventListener('click', sonraki);
+      kok.querySelector('.onceki').addEventListener('click', onceki);
+      kok.querySelector('.geri').addEventListener('click', cik);
+      // telefonda kartı sağa / sola kaydırarak da geçilir
+      let x0 = null, y0 = null;
+      flip.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+      flip.addEventListener('touchend', (e) => {
+        if (x0 == null) return;
+        const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+        // kaydırınca ardından gelen dokunma (click) yeni kartı çevirmesin
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) { e.preventDefault(); dx < 0 ? sonraki() : onceki(); }
+      }, { passive: false });
+      tusAyarla((e) => {
+        if (e.key === ' ') { e.preventDefault(); cevir(); }
+        else if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); sonraki(); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); onceki(); }
+        else if (e.key === 's' || e.key === 'S') { e.preventDefault(); oku('kelime'); }
+      });
+    }
+    function sonraki() {
+      Ses.dur(); i++;
+      // liste bitince yeniden karıştırıp devam et (aynı kelime art arda gelmesin)
+      if (i >= sira.length) { let yeni = karistir(liste); if (yeni.length > 1 && yeni[0] === sira[sira.length - 1]) yeni.push(yeni.shift()); sira = sira.concat(yeni); }
+      ciz();
+    }
+    function onceki() { if (i > 0) { Ses.dur(); i--; ciz(); } }
+    ciz();
+  }
+  // "#mini=u02_hola" → "u02_hola"
+  const miniAdresi = () => (/^#mini(?:=(.+))?$/.exec(location.hash) || null);
 
   /* =========================================================
      OTURUM (alıştırma / sınav / tekrar)
@@ -884,6 +983,9 @@
     if (degisti && anaEkrandaMi) return anaEkran();
     const d = kok.querySelector('#senkron-durum'); if (d) d.textContent = Senkron.durumYazisi();
   });
-  Promise.all([Depo.baslat(), Ses.baslat()]).then(() => { anaEkran(); Senkron.baslat(); });
+  // açılış: #mini adresiyle gelindiyse (widget) mini kart, değilse ana ekran
+  const acilisEkrani = () => { const m = miniAdresi(); if (m) miniKart(m[1] && decodeURIComponent(m[1])); else anaEkran(); };
+  window.addEventListener('hashchange', () => { if (miniAdresi()) acilisEkrani(); });
+  Promise.all([Depo.baslat(), Ses.baslat()]).then(() => { acilisEkrani(); Senkron.baslat(); });
   window.addEventListener('beforeunload', () => { Depo._yazHepsi(); });
 })();

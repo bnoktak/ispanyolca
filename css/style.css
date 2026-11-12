@@ -451,6 +451,19 @@ body.telefon .puanla button { flex: 1; min-height: 46px; font-size: 16px; font-w
 .kisi-kart h5 { margin: 14px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--soluk); }
 .kisi-kart .ozet-tablo td:first-child { width: 50%; }
 
+/* 🃏 mini kart */
+.tekrar-buton.mini-buton { margin-top: 10px; background: var(--kart); color: var(--yazi); border: 2px solid var(--cizgi); box-shadow: var(--golge); }
+.tekrar-buton.mini-buton small { color: var(--soluk); opacity: 1; }
+.tekrar-buton.mini-buton.pasif { background: var(--cizgi); box-shadow: none; }
+.tekrar-buton.mini-buton:not(.pasif):active { box-shadow: none; }
+.mini-buton + .ozet-buton { margin-top: 10px; }
+.flip.mini { height: 340px; }
+.flip.mini .yuz.on .es { font-size: 34px; }
+.mini-cumle { margin: 0; font-size: 19px; font-weight: 600; line-height: 1.4; color: var(--yazi); }
+.yuz.arka .mini-cumle { color: #ffd9cc; font-weight: 500; }
+.mini-ses { font-size: 18px; }
+.mini-not { text-align: center; margin-top: 12px; }
+
 /* ☁️ senkron anahtar kutusu */
 .anahtar-kutu { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; margin: 8px 0 2px; border-radius: 10px; border: 2px solid var(--cizgi); background: var(--zemin); color: var(--yazi); outline: none; }
 .anahtar-kutu:focus { border-color: var(--ana); }
