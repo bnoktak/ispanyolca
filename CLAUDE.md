@@ -27,6 +27,7 @@ js/uretici.js         şablon cümleler, birikimli çekim, cümlede çekim, ser/
 js/app.js             ekranlar (ana ekran, ünite, kartlar, alıştırma, sınav, özet tablolar, ayarlar)
 js/ses.js             Web Speech API ile İspanyolca okuma
 js/ai.js              yapay zekâ modülü (kapalı)
+js/senkron.js         ☁️ senkron: gizli GitHub Gist sürücüsü + birleştirme (kelime: en son cevaplanan, ünite: VEYA, puan: birleşim, sifirlama işareti); anahtar yalnızca Cihaz'da
 js/pwa.js             service worker kaydı, "🔄 Yeni sürüm hazır" şeridi (yalnızca https'te)
 sw.js                 service worker: çevrimdışı önbellek, SURUM etiketi (kanca her commit'te günceller)
 manifest.webmanifest  ana ekrana ekleme bilgileri · ikon/ 🌮 ikonları (180/192/512)

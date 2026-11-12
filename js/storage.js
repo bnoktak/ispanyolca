@@ -6,13 +6,13 @@
    Verinin nereye yazıldığını "sürücüler" belirler:
      - TarayiciSurucusu : tarayıcı içi önbellek (her zaman açık, güvenlik ağı)
      - DosyaSurucusu    : seçilen klasördeki ilerleme.json (asıl kayıt)
-     - (ileride) BulutSurucusu : aynı arayüzle eklenecek
+     - BulutSurucusu    : gizli GitHub Gist (js/senkron.js), birleştirerek eşitler
    Yedek indir/yükle de buradan yapılır.
    ========================================================= */
 (function () {
   'use strict';
 
-  const SURUM = 1;                 // ilerleme.json format sürümü
+  const SURUM = 2;                 // ilerleme.json format sürümü (2: sifirlama alanı, senkron için)
   const DOSYA_ADI = 'ilerleme.json';
   const ONCEKI_DOSYA = 'ilerleme.onceki.json';
   const LS_ANAHTAR = 'ispanyolca_ilerleme';
@@ -23,6 +23,7 @@
       surum: SURUM,
       olusturulma: simdi,
       guncelleme: simdi,
+      sifirlama: 0,      // son "Sıfırla" zamanı: senkronda bundan eski kayıtlar geri gelmez (js/senkron.js)
       uniteler: {},      // { u01: { adimlar:{not,kart,alistirma}, tamamlandi, enIyiSkor } }
       kelimeler: {},     // { kelimeId: { kutu, sonraki, dogru, yanlis, son } }
       puanlar: [],       // cevap günlüğü + 1–3 zorluk puanları (js/puan.js)
@@ -32,7 +33,8 @@
 
   /* ---- Format dönüştürücüler: eski sürüm dosyalar otomatik yükseltilir ---- */
   const DONUSTURUCULER = {
-    // örnek: 1: (v) => { v.yeniAlan = ...; v.surum = 2; return v; }
+    // 1 → 2: senkron için sıfırlama işareti (hiç sıfırlanmamış sayılır)
+    1: (v) => { v.sifirlama = 0; v.surum = 2; return v; }
   };
 
   function yukselt(veri) {
@@ -246,8 +248,10 @@
     },
     async sifirla() {
       this.veri = bosIlerleme();
+      this.veri.sifirlama = Date.now();   // öbür cihazlardaki eski ilerleme senkronla geri gelmesin
       await this._yazHepsi();
     },
+    SURUM, yukselt,
 
     dinle(fn) { this.dinleyiciler.push(fn); },
     _bildir() { this.dinleyiciler.forEach((f) => { try { f(); } catch (e) {} }); }

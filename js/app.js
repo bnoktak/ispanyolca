@@ -45,8 +45,10 @@
     return g <= 0 ? 'bugün' : g === 1 ? 'dün' : `${g} gün önce`;
   }
   function kayitDurumYazisi() {
-    if (Depo.dosyaAktif) return '✓ Harddiske otomatik kaydediliyor';
+    const bulut = Senkron.bagliMi() ? `<span id="senkron-durum">${esc(Senkron.durumYazisi())}</span><br>` : '';
+    if (Depo.dosyaAktif) return bulut + '✓ Harddiske otomatik kaydediliyor';
     const s = gunFarki(Depo.veri.ayarlar.sonYedek);
+    if (Senkron.bagliMi()) return bulut + (s ? `Son harddisk kaydı: ${s}` : '');
     return s ? `Son harddisk kaydı: ${s}` : 'Henüz harddiske kaydedilmedi · ⚙️ Ayarlar → Harddiske kaydet';
   }
 
@@ -593,6 +595,7 @@
         <label class="ikinci-buton dosya-sec">⬆️ Yedek dosyası yükle<input type="file" accept=".json,application/json" id="yukle" hidden></label>
         <p class="aciklama" id="yedek-not">${Depo.sonHata ? '⚠️ Son yazma başarısız: ' + esc(Depo.sonHata.message || '') : ''}</p>
       </section>
+      <section class="kutu" id="senkron-kutu">${senkronKutusu()}</section>
       <section class="kutu">
         <h3>📊 Zorluk puanları</h3>
         <label class="satir"><input type="checkbox" id="puanlama" ${puanlamaAcik() ? 'checked' : ''}> Alıştırmalarda her cevaptan sonra <b>1 kolay · 2 orta · 3 zor</b> düğmelerini göster</label>
@@ -667,8 +670,53 @@
       catch (err) { alert('Yüklenemedi: ' + err.message); }
     });
     kok.querySelector('#sifirla').addEventListener('click', async () => {
-      if (!confirm('Tüm ilerleme silinsin mi? Bu geri alınamaz.')) return;
-      await Depo.sifirla(); anaEkran();
+      if (!confirm(`Tüm ilerleme silinsin mi? Bu geri alınamaz.${Senkron.bagliMi() ? '\n\nSenkron açık: öbür cihazlarda da sıfırlanır.' : ''}`)) return;
+      await Depo.sifirla(); Senkron.zamanla(0); anaEkran();
+    });
+    senkronBagla();
+  }
+
+  /* ---------- ☁️ Senkron (Ayarlar içinde) ---------- */
+  function senkronKutusu() {
+    if (Senkron.bagliMi()) {
+      return `<h3>☁️ Senkron (bilgisayar ↔ telefon)</h3>
+        <p>${Senkron.calisiyor ? '☁️ Eşitleniyor…' : Senkron.hata ? `⚠️ ${esc(Senkron.hata.message)}` : `✓ Bağlı · son eşitleme: <b>${Senkron.son() ? Senkron.zamanYazisi(Senkron.son()) : 'henüz yok'}</b>`}</p>
+        <p class="aciklama">İlerlemen GitHub hesabındaki gizli bir Gist'te tutulur ve her cihazdakiyle birleştirilir. Açılışta, çalıştıktan kısa süre sonra ve uygulamadan çıkarken kendiliğinden eşitlenir.</p>
+        <button class="ana-buton" id="senkron-simdi" ${Senkron.calisiyor ? 'disabled' : ''}>🔄 Şimdi eşitle</button>
+        <button class="ikinci-buton" id="senkron-kes">Bağlantıyı kes</button>`;
+    }
+    return `<h3>☁️ Senkron (bilgisayar ↔ telefon)</h3>
+      <p class="aciklama">Bilgisayar ve telefondaki ilerlemen, GitHub hesabındaki <b>gizli bir Gist</b> üzerinden otomatik birleştirilir. Her cihaza bir kez GitHub anahtarı girilir; anahtar <b>yalnızca bu cihazda</b> saklanır.</p>
+      <input type="password" id="senkron-anahtar" class="anahtar-kutu" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="ana-buton" id="senkron-bagla">☁️ Bağla</button>
+      <details class="detay"><summary>Anahtar nasıl alınır?</summary>
+        <ol class="aciklama">
+          <li>github.com'a gir → sağ üstte profil resmi → <b>Settings</b> → en altta <b>Developer settings</b></li>
+          <li><b>Personal access tokens → Fine-grained tokens → Generate new token</b></li>
+          <li>Ad: <i>ispanyolca (${Cihaz.telefon() ? 'telefon' : 'bilgisayar'})</i> · Süre: en uzun (1 yıl)</li>
+          <li><b>Permissions → Account permissions → Gists: Read and write</b> (başka izin verme)</li>
+          <li><b>Generate token</b> → çıkan anahtarı kopyala, buraya yapıştır, <b>Bağla</b></li>
+        </ol>
+        <p class="aciklama">Her cihaz için ayrı anahtar oluşturman önerilir; bir cihaz kaybolursa yalnızca onunkini silersin.</p>
+      </details>
+      <p class="aciklama" id="senkron-not">${Senkron.hata ? '⚠️ ' + esc(Senkron.hata.message) : ''}</p>`;
+  }
+  function senkronBagla() {
+    const kutu = kok.querySelector('#senkron-kutu'); if (!kutu) return;
+    const yenile = () => { kutu.innerHTML = senkronKutusu(); senkronBagla(); };
+    const simdi = kutu.querySelector('#senkron-simdi');
+    if (simdi) simdi.addEventListener('click', async () => { simdi.disabled = true; await Senkron.esitle('elle'); yenile(); });
+    const kes = kutu.querySelector('#senkron-kes');
+    if (kes) kes.addEventListener('click', () => {
+      if (!confirm('Bu cihazda senkron kapatılsın mı? İlerlemen bu cihazda kalır; anahtar bu cihazdan silinir.')) return;
+      Senkron.kes(); yenile();
+    });
+    const bagla = kutu.querySelector('#senkron-bagla');
+    if (bagla) bagla.addEventListener('click', async () => {
+      const girdi = kutu.querySelector('#senkron-anahtar'), not = kutu.querySelector('#senkron-not');
+      bagla.disabled = true; not.textContent = '☁️ Bağlanıyor…';
+      try { await Senkron.bagla(girdi.value); girdi.value = ''; yenile(); }
+      catch (e) { bagla.disabled = false; not.textContent = '⚠️ ' + (e.kod === 'ag' ? 'İnternete ulaşılamadı' : e.kod === 'anahtar' ? 'Anahtar geçersiz' : e.kod === 'yetki' ? 'Anahtarın Gist izni yok: "Gists: Read and write" iznini ver' : e.message); }
     });
   }
 
@@ -830,6 +878,12 @@
   // 📱 Telefon modu: <body class="telefon"> görünümü değiştirir (css), soru dönüşümleri Alistirma'da
   function telefonSinifi() { document.body.classList.toggle('telefon', Cihaz.telefon()); }
   telefonSinifi();
-  Promise.all([Depo.baslat(), Ses.baslat()]).then(anaEkran);
+  // ☁️ Senkron: durum yazısını güncelle; veri değiştiyse ve ana ekrandaysak yeniden çiz
+  Senkron.dinle((degisti) => {
+    const anaEkrandaMi = !!kok.querySelector('.istatistik');
+    if (degisti && anaEkrandaMi) return anaEkran();
+    const d = kok.querySelector('#senkron-durum'); if (d) d.textContent = Senkron.durumYazisi();
+  });
+  Promise.all([Depo.baslat(), Ses.baslat()]).then(() => { anaEkran(); Senkron.baslat(); });
   window.addEventListener('beforeunload', () => { Depo._yazHepsi(); });
 })();

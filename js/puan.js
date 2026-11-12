@@ -25,7 +25,7 @@
   };
 
   const Puan = {
-    TUR_ADI,
+    TUR_ADI, SINIR,
     liste() { return Depo.veri.puanlar || (Depo.veri.puanlar = []); },
 
     // Her cevaptan sonra çağrılır; dönen kayıt puanla() ile puanlanabilir

@@ -451,6 +451,11 @@ body.telefon .puanla button { flex: 1; min-height: 46px; font-size: 16px; font-w
 .kisi-kart h5 { margin: 14px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--soluk); }
 .kisi-kart .ozet-tablo td:first-child { width: 50%; }
 
+/* ☁️ senkron anahtar kutusu */
+.anahtar-kutu { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; margin: 8px 0 2px; border-radius: 10px; border: 2px solid var(--cizgi); background: var(--zemin); color: var(--yazi); outline: none; }
+.anahtar-kutu:focus { border-color: var(--ana); }
+#senkron-kutu ol { padding-left: 20px; margin: 6px 0; }
+
 /* 🔄 Yeni sürüm şeridi (js/pwa.js) */
 .surum-serit { position: fixed; z-index: 50; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top));
   display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 999px;
