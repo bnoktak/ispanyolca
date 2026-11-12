@@ -39,7 +39,9 @@ icerik/uXX-*.js       27 ana ünite (sırayla açılır)
 icerik/xXX-*.js       ek üniteler (ek: true, kilitsiz, sira 100+)
 icerik/ozet.js        özet tablolar verisi (kişi tablosu, küçük tablolar, örnek cümleler)
 icerik/sablonlar.js   cümle şablonları (Quiero un/una X …)
-denetim.js            içerik denetimi: öğretilmemiş kelime var mı?
+icerik/kelime-cumleleri.js  kelime örnek cümleleri { kelimeId: [es, tr] } (mini kart + widget); claude.ai'da yazılır
+denetim.js            içerik denetimi: öğretilmemiş kelime var mı? (kelime cümleleri dahil: kimlik, kilit, uzunluk, kelime geçiyor mu)
+cumle-hazirlik.js     `node cumle-hazirlik.js` → hazirlik/cumle-grup-1..6.md (claude.ai'a yapıştırılacak kurallar + kelimeler + izinli kelimeler; git dışında)
 ```
 
 ## İçerik kuralları (bozulmamalı)

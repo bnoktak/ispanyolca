@@ -11,3 +11,6 @@ ispanyolca-yedek-*.json
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# claude.ai hazırlık dosyaları (node cumle-hazirlik.js üretir)
+hazirlik/
