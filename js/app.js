@@ -446,14 +446,14 @@
   /* ---------- Kelime kartları ---------- */
   function kartEkrani(uid) {
     const u = ICERIK.bul(uid);
-    const sira = ICERIK.gruplu(u).flatMap((g) => g.kelimeler), toplam = sira.length; let bilinen = 0, cevrik = false;
+    const sira = ICERIK.gruplu(u).flatMap((g) => g.kelimeler), toplam = sira.length; let bilinen = 0, cevrik = false;   // bilinen: şu anki kartın sırası
     function ciz() {
-      if (!sira.length) {
+      if (bilinen >= toplam) {
         u.kelimeler.forEach((k) => { if (!Tekrar.ogrenildiMi(k.id)) Tekrar.tanis(k.id); });
         adimBitir(uid, 'kart');
         return sonucEkrani({ baslik: 'Kartlar bitti', mesaj: `${toplam} kelimeyle tanıştın. Artık tekrar listende.`, geri: () => uniteEkrani(uid), ileri: { ad: 'Alıştırmalara geç →', fn: () => uniteEkrani(uid) } });
       }
-      const k = sira[0]; cevrik = false;
+      const k = sira[bilinen]; cevrik = false;
       kok.innerHTML = `
         <header class="ust"><button class="ikon geri">×</button>
           <div class="ilerleme"><div style="width:${(bilinen / toplam) * 100}%"></div></div><span class="sayac">${bilinen}/${toplam}</span></header>
@@ -461,7 +461,7 @@
           <div class="yuz on"><span class="es">${Alistirma.artikelHtml(k.es)}</span>${Ses.aktif() && Ses.okunurMu(k) ? '<button type="button" class="ses kart-ses" title="Dinle (S)">🔊</button>' : ''}<small>Çevirmek için dokun (boşluk)</small></div>
           <div class="yuz arka"><span>${esc(k.tr)}</span>${k.ipucu ? `<small>💡 ${esc(k.ipucu)}</small>` : ''}</div>
         </div></div>
-        <button class="ana-buton tam biliyorum">Sonraki →</button>`;
+        <div class="kart-butonlar"><button class="ikinci-buton onceki" ${bilinen ? '' : 'disabled'}>← Önceki</button><button class="ana-buton biliyorum">Sonraki →</button></div>`;
       const flip = kok.querySelector('.flip');
       const cevir = () => { cevrik = !cevrik; flip.classList.toggle('cevrik', cevrik); };
       const dinle = () => { if (Ses.okunurMu(k)) Ses.oku(k.es); };
@@ -469,12 +469,23 @@
       if (sesB) sesB.addEventListener('click', (e) => { e.stopPropagation(); dinle(); });
       if (Ses.otoOku()) setTimeout(dinle, 250);
       flip.addEventListener('click', cevir);
-      const bil = () => { sira.shift(); bilinen++; ciz(); };
+      const bil = () => { Ses.dur(); bilinen++; ciz(); };
+      const onceki = () => { if (bilinen > 0) { Ses.dur(); bilinen--; ciz(); } };
       kok.querySelector('.biliyorum').addEventListener('click', bil);
+      kok.querySelector('.onceki').addEventListener('click', onceki);
       kok.querySelector('.geri').addEventListener('click', () => { Ses.dur(); uniteEkrani(uid); });
+      // telefonda kartı sağa / sola kaydırarak da geçilir
+      let x0 = null, y0 = null;
+      flip.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+      flip.addEventListener('touchend', (e) => {
+        if (x0 == null) return;
+        const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) { e.preventDefault(); dx < 0 ? bil() : onceki(); }
+      }, { passive: false });
       tusAyarla((e) => {
         if (e.key === ' ') { e.preventDefault(); cevir(); }
         else if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); bil(); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); onceki(); }
         else if (e.key === 's' || e.key === 'S') { e.preventDefault(); dinle(); }
       });
     }
@@ -1100,8 +1111,20 @@
           const [e, d] = k.es.split(' / '), fark = d ? farkHtml(e, d) : null;
           return `<tr><td><span class="renk-kare" style="background:${(t.renkler || {})[k.id] || 'transparent'}"></span></td><td class="es">${fark ? `${okuSar(e, fark[0])} · ${okuSar(d, fark[1])}` : esHucre(k)}</td><td class="tr">${esc(k.tr)}</td><td>${uniteEtiket(k.unite)}</td></tr>`; }).join('')}</table>`;
       } else {   // liste, saat
-        ic = bol.map((b) => { const k = b.k.filter(acik); return k.length ? `${b.ad ? `<h5>${esc(b.ad)}</h5>` : ''}<table class="ozet-tablo tema-liste">${k.map((x) =>
-          `<tr><td class="es">${esHucre(x, t.simge && t.simge[x.id] ? `<span class="simge">${t.simge[x.id]}</span> ` : '')}</td><td class="tr">${esc(x.tr)}</td><td>${uniteEtiket(x.unite)}</td></tr>`).join('')}</table>` : ''; }).join('');
+        const simgeli = (x) => esHucre(x, t.simge && t.simge[x.id] ? `<span class="simge">${t.simge[x.id]}</span> ` : '');
+        const liste = t.bicim === 'liste';
+        const tekTablo = (k) => `<table class="ozet-tablo tema-liste">${k.map((x) =>
+          `<tr><td class="es">${simgeli(x)}</td><td class="tr">${esc(x.tr)}</td>${liste ? '' : `<td>${uniteEtiket(x.unite)}</td>`}</tr>`).join('')}</table>`;
+        // liste: artikelli kelimeler iki sütunda, ♂ el / los solda, ♀ la / las sağda; artikelsizler altta tek sütun
+        const cinsTablo = (er, di) => { const n = Math.max(er.length, di.length), h = (x) => (x ? `<td class="es">${simgeli(x)}<small>${esc(x.tr)}</small></td>` : '<td></td>');
+          return `<table class="ozet-tablo tema-cins"><tr><th class="art-e">♂ el</th><th class="art-d">♀ la</th></tr>${Array.from({ length: n }, (_, i) => `<tr>${h(er[i])}${h(di[i])}</tr>`).join('')}</table>`; };
+        ic = bol.map((b) => { const k = b.k.filter(acik); if (!k.length) return '';
+          const bas = b.ad ? `<h5>${esc(b.ad)}</h5>` : '';
+          if (!liste) return bas + tekTablo(k);
+          const er = k.filter((x) => /^(el|los) /i.test(x.es)), di = k.filter((x) => /^(la|las) /i.test(x.es)), tek = k.filter((x) => !er.includes(x) && !di.includes(x));
+          // bölümde tek cins varsa (ör. içecekler hep "el") boş sütun olmasın: düz liste
+          if (!er.length || !di.length) return bas + tekTablo(k);
+          return bas + cinsTablo(er, di) + (tek.length ? tekTablo(tek) : ''); }).join('');
         const orn = (t.ornekler || []).filter((o) => acikMi(o[2]));
         if (orn.length) ic += `<h5>Örnekler</h5><table class="ozet-tablo tema-saat">${orn.map((o) => `<tr><td class="saat-rakam">${esc(o[0])}</td><td class="es">${sesli(o[1])}</td></tr>`).join('')}</table>`;
       }
