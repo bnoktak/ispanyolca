@@ -381,6 +381,10 @@ button:disabled { cursor: default; }
 
 /* örnek soru–cevaplar */
 .ozet-tablo td.sc { line-height: 1.55; }
+.sc-tablo td.es.sc { color: var(--yazi); font-weight: 500; }
+.kalip-tablo td.fiil { white-space: nowrap; }
+.ek-tablo .fiil-bas small, .kalip-tablo .fiil-bas small { display: block; color: var(--soluk); font-weight: 400; font-size: 11px; }
+.kalip-ek { color: var(--soluk); font-weight: 500; }
 .ozet-tablo td.sc .cevap { opacity: .8; }
 .ozet-tablo td.es.sc .cevap .oku { font-weight: 500; }
 .sc-tablo .fiil-tr { color: var(--soluk, #999); font-weight: 400; }

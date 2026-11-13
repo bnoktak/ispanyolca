@@ -950,7 +950,7 @@
       return { id, ad: t.baslik, html: `<section class="kutu ozet-kutu" id="${id}"><h3>${t.baslik}</h3><div class="tablo-kaydir"><table class="ozet-tablo">
         <tr>${t.sutunlar.map((c) => `<th>${esc(c)}</th>`).join('')}${orn ? '<th>💬 sık duyacağın soru ↳ cevap</th><th>Türkçe</th>' : ''}<th></th></tr>
         ${satirlar.map((s) => `<tr>${s.slice(0, -1).map((c, i) => `<td class="${esMi(i) ? 'es' : ''}">${esMi(i) ? sesli(c) : satirli(c)}</td>`).join('')}${orn ? scHucre(ornek(orn[s[0]])) : ''}<td>${uniteEtiket(s.at(-1))}</td></tr>`).join('')}
-      </table></div>${kalanNot(t.satirlar.map((s) => s.at(-1)), 'satır')}</section>` };
+      </table></div>${t.not ? `<p class="aciklama tablo-not">💡 ${esc(t.not)}</p>` : ''}${kalanNot(t.satirlar.map((s) => s.at(-1)), 'satır')}</section>` };
     });
     // 2) KİŞİ TABLOSU: her satır bir kişi; zamir + sahiplik + gustar + dönüşlü + tüm fiil çekimleri yan yana
     const KT = ICERIK.kisiTablosu;
@@ -1014,15 +1014,32 @@
     const fiilOrn = fiiller.flatMap((f) => { const v = ORN.fiil[f.fiil]; if (!v) return []; return (Array.isArray(v[0]) ? v : [v]).filter((o) => acikMi(o[2])).map((o) => ({ f, o })); });
     // sahiplikle basit cümleler
     const sahip = (ORN.sahip || []).filter((x) => acikMi(x[3]));
+    // 🎨 cümle içinde kelime boyama: adaylardan cümlede geçen ilki (uzun olan önce) htmlFn ile sarılır, gerisi düz
+    const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const cumleBoya = (cumle, adaylar) => {
+      for (const a of [...adaylar].sort((x, y) => y.w.length - x.w.length)) {
+        const m = new RegExp(`(^|[^\\p{L}])(${escRe(a.w)})(?![\\p{L}])`, 'iu').exec(cumle);
+        if (!m) continue;
+        const bas = m.index + m[1].length, son = bas + m[2].length;
+        let ic = a.fn(m[2].toLowerCase());
+        if (m[2][0] !== m[2][0].toLowerCase()) ic = ic.replace(/^((?:<[^>]*>)*)(\p{L})/u, (_, t, c) => t + c.toUpperCase());
+        return esc(cumle.slice(0, bas)) + ic + esc(cumle.slice(son));
+      }
+      return esc(cumle);
+    };
+    const KISI_K = KT.kisiler.map((x) => x.k);
+    const SAHIP_K = { mi: 'yo', mis: 'yo', tu: 'tu', tus: 'tu', su: 'el', sus: 'el', nuestro: 'nos', nuestra: 'nos', nuestros: 'nos', nuestras: 'nos' };
+    const sahipCumle = (x) => okuHtml(x[1], (t) => cumleBoya(t, [{ w: x[0], fn: renkli(SAHIP_K[x[0]] || 'el') }]));
+    const fiilCumle = (f, t) => okuHtml(t, (s) => cumleBoya(s, KISI_K.flatMap((k) => (f[k] ? f[k].split(/\n| \/ /) : []).map((w) => ({ w: w.trim(), fn: (v) => Alistirma.bicimHtml(f.fiil, v, k) })))));
     const sahipHtml = sahip.length ? `<section class="kutu ozet-kutu"><h3>👜 Sahiplikle basit cümleler</h3>
       <table class="ozet-tablo sc-tablo"><tr><th>Sahiplik</th><th>Cümle</th><th>Türkçe</th><th></th></tr>
-        ${sahip.map((x) => `<tr><td class="es">${sesli(x[0])}</td><td class="es sc">${sesli(x[1])}</td><td class="tr">${esc(x[2])}</td><td>${uniteEtiket(x[3])}</td></tr>`).join('')}
+        ${sahip.map((x) => `<tr><td class="es">${okuHtml(x[0], renkli(SAHIP_K[x[0]] || 'el'))}</td><td class="es sc">${sahipCumle(x)}</td><td class="tr">${esc(x[2])}</td><td>${uniteEtiket(x[3])}</td></tr>`).join('')}
       </table></section>` : '';
     const fiilOrnHtml = fiilOrn.length ? `<section class="kutu ozet-kutu"><h3>💬 Her fiille bir cümle</h3>
       <p class="aciklama">Basit, gezerken işine yarayacak cümleler. Tıklayınca okunur.</p>
       <div class="tablo-kaydir"><table class="ozet-tablo sc-tablo">
         <tr><th>Fiil</th><th>Cümle</th><th>Türkçe</th><th></th></tr>
-        ${fiilOrn.map(({ f, o }, i) => `<tr>${i && fiilOrn[i - 1].f === f ? '<td></td>' : `<td class="es">${sesli(f.fiil)}<br><small class="fiil-tr">${esc(f.tr)}</small></td>`}<td class="es sc">${sesli(o[0])}</td><td class="tr">${esc(o[1])}</td><td>${uniteEtiket(o[2])}</td></tr>`).join('')}
+        ${fiilOrn.map(({ f, o }, i) => `<tr>${i && fiilOrn[i - 1].f === f ? '<td></td>' : `<td class="es">${sesli(f.fiil)}<br><small class="fiil-tr">${esc(f.tr)}</small></td>`}<td class="es sc">${fiilCumle(f, o[0])}</td><td class="tr">${esc(o[1])}</td><td>${uniteEtiket(o[2])}</td></tr>`).join('')}
       </table></div></section>` : '';
     // 3) tüm kelimeler, ünite ünite, aranabilir
     const uniteler = ICERIK.uniteler.filter((u) => u.sira <= acikSira);
@@ -1095,6 +1112,30 @@
     const SEKMELER = [['dilbilgisi', '📐 Dilbilgisi'], ['gruplar', '🗂️ Gruplar'], ['kelimeler', '📖 Kelimeler']];
     const sekme = SEKMELER.some(([s]) => s === Cihaz.al('ozetSekme')) ? Cihaz.al('ozetSekme') : 'dilbilgisi';
     const gorunumSec = `<div class="gorunum-sec"><button type="button" data-gorunum="tablo" class="${gorunum === 'tablo' ? 'secili' : ''}">📊 Tablo</button><button type="button" data-gorunum="kartlar" class="${gorunum === 'kartlar' ? 'secili' : ''}">👤 Kartlar</button></div>`;
+    // 🔧 -ar / -er / -ir ekleri ve 🪄 4 sihirli kalıp: çekim verisinden, renkli (Ü23, Ü24'te açılır)
+    const tumFiil = ICERIK.uniteler.flatMap((u) => (u.cekimler || []).map((c) => ({ ...c, uid: u.id })));
+    const fiilBul = (ad) => tumFiil.find((c) => c.fiil === ad);
+    const kisiHucre = (x) => okuHtml(x.es.split('\n')[0], renkli(x.k));
+    const eklerTablo = (() => {
+      const id = 'oz-ekler', baslik = '🔧 -ar / -er / -ir: ekler', ucu = ['hablar', 'comer', 'vivir'].map(fiilBul);
+      if (!acikMi('u23') || ucu.some((c) => !c)) return { id, ad: baslik, kilitli: true, html: kilitKart(id, baslik, ['u23'], 0) };
+      return { id, ad: baslik, html: `<section class="kutu ozet-kutu" id="${id}"><h3>${baslik}</h3>
+        <p class="aciklama">Fiilin sonundaki -ar / -er / -ir atılır, kişinin eki eklenir. Renkler kişileri gösterir.</p>
+        <div class="tablo-kaydir"><table class="ozet-tablo ek-tablo"><tr><th>kişi</th>${ucu.map((c) => `<th class="fiil-bas">${esc(c.fiil)}<small>${esc(c.tr)}</small></th>`).join('')}</tr>
+        ${KT.kisiler.map((x) => `<tr><td class="es">${kisiHucre(x)}</td>${ucu.map((c) => `<td class="es fiil">${fiilHucreHtml(c, x.k)}</td>`).join('')}</tr>`).join('')}</table></div>
+        <p class="aciklama tablo-not">💡 -er ve -ir fiillerinin ekleri yalnızca nosotros'ta ayrılır: com·<b>emos</b> / viv·<b>imos</b>.</p></section>` };
+    })();
+    const kalipTablo = (() => {
+      const id = 'oz-kalip', baslik = '🪄 4 sihirli kalıp: + fiilin mastarı';
+      const KALIP = [['querer', '', 'istiyorum'], ['poder', '', '-ebilirim'], ['tener', ' que', '-meliyim'], ['ir', ' a', '-eceğim']].map(([f, ek, tr]) => ({ c: fiilBul(f), ek, tr }));
+      if (!acikMi('u24') || KALIP.some((x) => !x.c)) return { id, ad: baslik, kilitli: true, html: kilitKart(id, baslik, ['u24'], 0) };
+      const ORNEK = [['¿Qué quieres comer?', 'Ne yemek istersin?', 0], ['¿Puedo pagar aquí?', 'Burada ödeyebilir miyim?', 1], ['Tengo que ir al banco.', 'Bankaya gitmem lazım.', 2], ['Voy a viajar a Colombia.', "Kolombiya'ya seyahat edeceğim.", 3]];
+      return { id, ad: baslik, html: `<section class="kutu ozet-kutu" id="${id}"><h3>${baslik}</h3>
+        <p class="aciklama">Bu dört kalıbın arkasına fiilin mastarı gelir (comer, ir, pagar…). Gezide söylemek istediklerinin çoğu bunlarla kurulur.</p>
+        <div class="tablo-kaydir"><table class="ozet-tablo kalip-tablo"><tr><th>kişi</th>${KALIP.map((x) => `<th class="fiil-bas">${esc(x.c.fiil + x.ek)} …<small>${esc(x.tr)}</small></th>`).join('')}</tr>
+        ${KT.kisiler.map((x) => `<tr><td class="es">${kisiHucre(x)}</td>${KALIP.map((k) => `<td class="es fiil">${fiilHucreHtml(k.c, x.k)}${k.ek ? `<span class="kalip-ek">${esc(k.ek)}</span>` : ''}</td>`).join('')}</tr>`).join('')}</table></div>
+        <h5>Örnekler</h5><table class="ozet-tablo sc-tablo">${ORNEK.map(([e, t, i]) => `<tr><td class="es sc">${fiilCumle(KALIP[i].c, e)}</td><td class="tr">${esc(t)}</td></tr>`).join('')}</table></section>` };
+    })();
     const sahipUid = (ORN.sahip || []).map((x) => x[3]);
     const fiilUid = Object.values(ORN.fiil || {}).flatMap((v) => (Array.isArray(v[0]) ? v : [v]).map((o) => o[2]));
     let bolumler;
@@ -1102,6 +1143,7 @@
       bolumler = [
         kisiler.length ? { id: 'oz-kisi', ad: '🧑 Kişiler', html: `<div id="oz-kisi">${gorunumSec}${kisiBolum}</div>` }
           : { id: 'oz-kisi', ad: '🧑 Kişiler', kilitli: true, html: kilitKart('oz-kisi', '🧑 Kişilere göre: zamir, sahiplik, fiiller', KT.kisiler.map((x) => x.uid), 0) },
+        eklerTablo, kalipTablo,
         sahipHtml ? { id: 'oz-sahip', ad: '👜 Sahiplik', html: `<div id="oz-sahip">${sahipHtml}</div>` }
           : { id: 'oz-sahip', ad: '👜 Sahiplik', kilitli: true, html: kilitKart('oz-sahip', '👜 Sahiplikle basit cümleler', sahipUid, sahipUid.length, 'cümle') },
         fiilOrnHtml ? { id: 'oz-fiil', ad: '💬 Fiil cümleleri', html: `<div id="oz-fiil">${fiilOrnHtml}</div>` }
@@ -1114,7 +1156,7 @@
       <header class="ust"><button class="ikon geri">←</button><div class="ust-baslik">📚 Özet tablolar</div><span></span></header>
       <nav class="ozet-sekmeler">${SEKMELER.map(([s, a]) => `<button type="button" data-sekme="${s}" class="${s === sekme ? 'secili' : ''}">${a}</button>`).join('')}</nav>
       <p class="aciklama">Ünite ${acikSira}’e kadar öğrendiklerin. Yeni ünite açtıkça tablolar büyür. <b>Ü</b> = öğretildiği ünite.</p>
-      ${sekme !== 'kelimeler' ? `<nav class="ozet-etiketler">${bolumler.map((b) => `<button type="button" data-bolum="${b.id}" class="${b.kilitli ? 'kilitli' : ''}">${b.kilitli ? '🔒 ' : ''}${esc(b.ad.replace(/^\S+\s/, ''))}</button>`).join('')}</nav>` : ''}
+      ${sekme !== 'kelimeler' ? `<nav class="ozet-etiketler">${bolumler.map((b) => `<button type="button" data-bolum="${b.id}" class="${b.kilitli ? 'kilitli' : ''}">${b.kilitli ? '🔒 ' : ''}${esc(b.ad.replace(/^\S+\s/, '').split(':')[0])}</button>`).join('')}</nav>` : ''}
       ${bolumler.map((b) => b.html).join('')}`;
     kok.classList.add('genis');
     kok.querySelectorAll('[data-sekme]').forEach((b) => b.addEventListener('click', () => {

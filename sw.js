@@ -6,7 +6,7 @@
    indirir ve "🔄 Yeni sürüm hazır" şeridi çıkar (js/pwa.js).
    Yeni dosya eklenirse DOSYALAR listesine de eklenmeli (node denetim.js kontrol eder).
    ========================================================= */
-const SURUM = '2026-11-13_21-05-06';
+const SURUM = '2026-11-13_21-14-07';
 const ONBELLEK = 'ispanyolca-' + SURUM;
 
 const DOSYALAR = [

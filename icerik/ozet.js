@@ -47,6 +47,33 @@ ICERIK.ozet = [
   { baslik: '⚖️ ser mi estar mı?', sutunlar: ['', 'ne zaman?', 'örnek'], es: [0, 2], satirlar: [
     ['ser', 'kim / ne olduğun, meslek, memleket, kalıcı özellik', 'Soy ingeniero. Soy de Turquía.', 'u04'],
     ['estar', 'nerede olduğun, şu anki durum', 'Estoy en casa. Estoy cansado.', 'u05']
+  ] },
+  // not: tablonun altında küçük açıklama
+  { baslik: '❤️ gustar: sevmek, hoşlanmak', sutunlar: ['kalıp', 'örnek', 'Türkçe'], es: [0, 1],
+    not: 'gusta + tekil isim ya da fiil (me gusta el café, me gusta bailar) · gustan + çoğul isim (me gustan las empanadas). Kimin sevdiği başta: me, te, le, nos, les.',
+    satirlar: [
+    ['me gusta', 'Me gusta la música.', 'Müziği severim.', 'u07'],
+    ['te gusta', '¿Te gusta bailar?', 'Dans etmeyi sever misin?', 'u07'],
+    ['no me gusta', 'No me gusta el ron.', 'Romu sevmem.', 'u07'],
+    ['me encanta', 'Me encanta la salsa.', 'Salsaya bayılırım.', 'u07'],
+    ['me gustan', 'Me gustan las empanadas.', 'Empanadaları severim.', 'u25'],
+    ['le gusta', 'A Ana le gusta bailar.', 'Ana dans etmeyi sever.', 'u25'],
+    ['nos gusta', 'Nos gusta mucho Colombia.', 'Kolombiya\'yı çok severiz.', 'u25'],
+    ['¿y a ti?', 'Me gusta el fútbol, ¿y a ti?', 'Futbolu severim, ya sen?', 'u25'],
+    ['a mí también', 'Me gusta el mar. ¡A mí también!', 'Denizi severim. Ben de!', 'u25'],
+    ['a mí tampoco', 'No me gusta el ron. ¡A mí tampoco!', 'Romu sevmem. Ben de!', 'u25']
+  ] },
+  { baslik: '🔗 Bağlaçlar: cümleleri bağlayan kelimeler', sutunlar: ['', 'Türkçe', 'örnek', 'Türkçesi'], es: [0, 2], satirlar: [
+    ['y', 've', 'Hablo español y inglés.', 'İspanyolca ve İngilizce konuşuyorum.', 'u02'],
+    ['también', 'de, da; ayrıca', 'Yo también hablo inglés.', 'Ben de İngilizce konuşuyorum.', 'u02'],
+    ['porque', 'çünkü', 'Hablo poco porque no entiendo.', 'Az konuşuyorum çünkü anlamıyorum.', 'u02'],
+    ['pero', 'ama', 'Soy turco, pero hablo español.', 'Türküm ama İspanyolca konuşuyorum.', 'u04'],
+    ['entonces', 'o zaman', 'Entonces, ¿nos vemos mañana?', 'O zaman yarın görüşelim mi?', 'u08'],
+    ['cuando', '-ınca, -dığında', 'Cuando bebo, bailo.', 'İçince dans ederim.', 'u08'],
+    ['después', 'sonra', 'Comemos y después bailamos.', 'Yiyoruz, sonra dans ediyoruz.', 'u10'],
+    ['tampoco', 'de (olumsuz)', 'Yo tampoco bailo salsa.', 'Ben de salsa yapmıyorum.', 'u25'],
+    ['primero … luego', 'önce … sonra', 'Primero comemos, luego bailamos.', 'Önce yiyoruz, sonra dans ediyoruz.', 'u26'],
+    ['antes de', '-meden önce', 'Antes de dormir, leo.', 'Uyumadan önce okurum.', 'u26']
   ] }
 ];
 
