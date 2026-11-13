@@ -89,7 +89,13 @@ const sonuc = (ad, ok, ek = '') => console.log(`${ok ? 'GEÇTİ ' : 'KALDI '} ${
       fs.writeFileSync(path.join(path.dirname(PROFIL), 'serit.png'), Buffer.from(g.data, 'base64'));
     }
     if (serit) {
-      await bekle(2000);   // insan gibi: şerit çıktıktan biraz sonra dokun
+      // şerit açıkken bir sürüm daha yayınlanır (dokunmadan önce): Yenile en yenisine geçirmeli
+      swEki = 'TEST-YENI-2';
+      await degerlendir(o, `navigator.serviceWorker.getRegistration().then((r) => r.update()).then(() => true)`);
+      let ikinci = false;
+      for (let i = 0; i < 30 && !ikinci; i++) { await bekle(500); ikinci = await degerlendir(o, `navigator.serviceWorker.getRegistration().then((r) => r.waiting ? new Promise((c) => { const k = new MessageChannel(); k.port1.onmessage = (e) => c(e.data === 'TEST-YENI-2'); r.waiting.postMessage('surum', [k.port2]); setTimeout(() => c(false), 1000); }) : false)`); }
+      sonuc('şerit açıkken ikinci sürüm indi (bekliyor)', ikinci);
+      await bekle(1000);
       await degerlendir(o, `document.querySelector('.surum-serit button').click(), true`);
       // sayfa yenilenirken sorulan değerler yarım kalabilir: yenilemenin bitmesini bekleyip etkin sürümü kayıttan sor
       let s4, onb;
@@ -99,9 +105,9 @@ const sonuc = (ad, ok, ek = '') => console.log(`${ok ? 'GEÇTİ ' : 'KALDI '} ${
           s4 = await degerlendir(o, `navigator.serviceWorker.getRegistration().then((r) => r && r.active ? new Promise((c) => { const k = new MessageChannel(); k.port1.onmessage = (e) => c(e.data); r.active.postMessage('surum', [k.port2]); setTimeout(() => c(null), 1500); }) : null)`);
           onb = await degerlendir(o, `caches.keys().then((k) => k.join(','))`);
         } catch (e) {}
-        if (s4 === 'TEST-YENI' && onb === 'ispanyolca-TEST-YENI') break;
+        if (s4 === 'TEST-YENI-2' && onb === 'ispanyolca-TEST-YENI-2') break;
       }
-      sonuc('Yenile sonrası yeni sürüm etkin, eski önbellek silindi', s4 === 'TEST-YENI' && onb === 'ispanyolca-TEST-YENI', `${s4} · ${onb}`);
+      sonuc('Yenile sonrası en yeni sürüm etkin, eski önbellekler silindi', s4 === 'TEST-YENI-2' && onb === 'ispanyolca-TEST-YENI-2', `${s4} · ${onb}`);
     }
 
     // 5) 390 px genişlikte taşma yok

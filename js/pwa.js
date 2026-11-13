@@ -17,13 +17,16 @@
   if (!uygun) return;
   PWA.aktif = true;
 
-  function seritGoster(bekleyen) {
+  function seritGoster(kayit) {
     if (document.querySelector('.surum-serit')) return;
     const s = document.createElement('div');
     s.className = 'surum-serit';
     s.innerHTML = '<span>🔄 Yeni sürüm hazır</span><button type="button">Yenile</button>';
     s.querySelector('button').addEventListener('click', () => {
       s.querySelector('button').disabled = true;
+      // şerit açıkken bir sürüm daha gelmiş olabilir: o an bekleyen (en yeni) sürüme söyle
+      const bekleyen = kayit.waiting;
+      if (!bekleyen) { location.reload(); return; }   // başka bir sekme zaten geçirmiş
       yenilemeIstendi = true;
       bekleyen.postMessage('atla');
     });
@@ -50,12 +53,12 @@
       const kayit = await navigator.serviceWorker.register('sw.js');
       surumuSor();
       // ilk kurulumda (controller yokken) şerit gösterme; yalnızca güncellemede
-      if (kayit.waiting && navigator.serviceWorker.controller) seritGoster(kayit.waiting);
+      if (kayit.waiting && navigator.serviceWorker.controller) seritGoster(kayit);
       kayit.addEventListener('updatefound', () => {
         const yeni = kayit.installing;
         if (!yeni) return;
         yeni.addEventListener('statechange', () => {
-          if (yeni.state === 'installed' && navigator.serviceWorker.controller) seritGoster(yeni);
+          if (yeni.state === 'installed' && navigator.serviceWorker.controller) seritGoster(kayit);
         });
       });
       // Ana ekrandaki uygulama arka plandan dönünce sayfa yenilenmez; güncellemeyi o an da kontrol et
