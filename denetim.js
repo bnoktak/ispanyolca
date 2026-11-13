@@ -101,6 +101,18 @@ for (const u of ICERIK.uniteler) {
 }
 // ek üniteler (kilitsiz): tüm ana ünitelerin kelimeleri + kendi kelimeleri
 for (const u of ICERIK.ekler) { u.kelimeler.forEach(k => norm(k.es).split(/[\s/]+/).filter(Boolean).forEach(w => izinli.add(w))); cumleDenetle(u); }
+// 🗂️ kelime grupları (icerik/ozet.js → ICERIK.temalar): grup adları ve kelime kimlikleri gerçekten var mı?
+if (fs.existsSync('icerik/ozet.js')) {
+  eval(fs.readFileSync('icerik/ozet.js', 'utf8'));
+  (ICERIK.temalar || []).forEach(t => {
+    const ids = [...(t.ciftler || []).flat(), ...(t.tekler || []), ...Object.keys(t.renkler || {}), ...Object.keys(t.simge || {})];
+    (t.bolumler || []).forEach(b => {
+      if (b.grup) { const u = ICERIK.bul(b.grup[0]); if (!u || !(u.gruplar || []).some(g => g[0] === b.grup[1])) { sorun++; console.log('TEMA', t.id, '| grup yok:', b.grup.join(' / ')); } }
+      ids.push(...(b.kelimeler || []), ...(b.haric || []));
+    });
+    ids.filter(i => !ICERIK.kelime(i)).forEach(i => { sorun++; console.log('TEMA', t.id, '| kelime yok:', i); });
+  });
+}
 if (DL.length) console.log(`Dinleme sahneleri: ${DL.length} (${Object.keys(BLOKLAR).map(b => `${b}: ${DL.filter(s => s.blok === b).length}`).join(', ')})`);
 if (Object.keys(KC).length) console.log(`Kelime cümleleri: ${Object.keys(KC).length} / ${[...ICERIK.uniteler, ...ICERIK.ekler].flatMap(u => u.kelimeler).filter(k => k.yazma !== false).length} kelimenin cümlesi var${uyari ? `, ${uyari} uyarı` : ''}`);
 // Yayın listesi: index.html'deki her dosya sw.js'de (çevrimdışı önbellek) var mı, listedeki dosyalar gerçekten var mı?

@@ -47,7 +47,6 @@
     veri() {
       const k = this.ogrenilenler().sort((a, b) => (a.id < b.id ? -1 : 1)).map((x) => {
         const o = { id: x.id, es: x.es, tr: x.tr };
-        if (x.en) o.en = x.en;
         const c = this.cumleler(x).slice(0, CUMLE_SAYISI).map((y) => [y.es, y.tr]);
         if (c.length) o.c = c;
         return o;

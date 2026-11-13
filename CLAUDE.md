@@ -15,6 +15,8 @@ Ayrıntılı kararlar `PLAN.md` içinde, telefona taşıma planı `TELEFON_PLANI
 - Global nesneler: `ICERIK` (içerik), `Depo` (kayıt), `Tekrar` (aralıklı tekrar), `Ses` (sesli okuma), `Alistirma` (soru türleri), `Puan` (1-2-3 zorluk günlüğü), `Cihaz` (yalnızca bu cihazın ayarları: telefon modu vb.; ilerlemeye/senkrona girmez).
 - 📱 Telefon modu (`Cihaz.telefon()`, `<body class="telefon">`): yazma soruları `Alistirma.yazVeya` / `ceviriVeya` / `yazModu` ile çoğunlukla şıklara, 🔤 harflerden kur (`harf_kur`) ve 🧱 kelimelerden kur (`ceviri_kur`) türlerine döner; ~%20'si yazma kalır. Yeni bir yazma sorusu eklenirse bu dönüşüme de bağlanmalı.
 - 🏆 Büyük sınav (`Alistirma.BUYUK_SINAVLAR`: b01 Ünite 1–5, b02 6–10, b03 11–15, b04 16–20, b05 21–27): 24 soru = 18 🎧 uzun dinleme (`icerik/dinleme.js` sahneleri; her sahne `anla` + `cevap` sorusu, `dinle_anla` / `dinle_cevap` türleri, iki sesle okunur, sınavda yazı gizli) + 6 kısa üretim (zor kelimeler önce). B02+ sınavlarda ≤2 sahne önceki bloklardan; bloğun sahnesi yetmezse eksik yer klasik sorularla dolar. Eşleştirme yok, geçme %80. Sonuç `Depo.veri.uniteler.b01…` kaydında (ünite gibi birleşir, veri biçimi aynı). Geçilmeden bloğun sonraki ünitesi açılmaz; zaten başlanmış ünite kilitlenmez (`uniteAcikMi`).
+- 📚 Özet tablolar üç sekme (📐 Dilbilgisi · 🗂️ Gruplar · 📖 Kelimeler; son seçim `Cihaz` 'ozetSekme'). Hiç açık satırı olmayan tablo soluk "🔒 Ünite X'te açılır" kartı, yarı açık tabloda "+N kelime" notu. Kişi tablosunda renkler: `Alistirma.bicimHtml` (kök · ek, değişen ünlü, ⚡ düzensiz), kişi renkleri `.k-yo…`, artikel `Alistirma.artikelHtml`.
+- İngilizce karşılıklar gösterilmez (kullanıcı isteği); içerikteki `en` alanları duruyor ama hiçbir yerde kullanılmıyor.
 - Yeni bir dosya eklenirse `index.html` içindeki script sırasına **ve `sw.js` içindeki `DOSYALAR` listesine** eklenmeli (`node denetim.js` eksikleri bildirir).
 
 ```
@@ -38,7 +40,7 @@ manifest.webmanifest  ana ekrana ekleme bilgileri · ikon/ 🌮 ikonları (180/1
 icerik/icerik.js      içerik kaydı + ünite biçiminin açıklaması
 icerik/uXX-*.js       27 ana ünite (sırayla açılır)
 icerik/xXX-*.js       ek üniteler (ek: true, kilitsiz, sira 100+)
-icerik/ozet.js        özet tablolar verisi (kişi tablosu, küçük tablolar, örnek cümleler)
+icerik/ozet.js        özet tablolar verisi (kişi tablosu, küçük tablolar, örnek cümleler) + ICERIK.temalar (🗂️ kelime grupları: ünite gruplarından / kelime id'lerinden; biçimler liste·cift·zit·renk·sayi·saat; denetim referansları kontrol eder)
 icerik/sablonlar.js   cümle şablonları (Quiero un/una X …)
 icerik/dinleme.js     🎧 uzun dinleme sahneleri (büyük sınav): { id, blok, uid, sahne, satirlar [[A|B, es]], tr, anla, cevap }; şıkların ilki doğru; denetim uid'ye göre kontrol eder
 icerik/kelime-cumleleri.js  kelime örnek cümleleri { kelimeId: [es, tr] } (mini kart + widget); claude.ai'da yazılır

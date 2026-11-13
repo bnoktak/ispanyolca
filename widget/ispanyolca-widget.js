@@ -128,7 +128,6 @@ module.exports = async function ispanyolcaWidget({ veriAdresi }) {
   .tr { font-size: 30px; font-weight: 700; }
   .cumle { font-size: 20px; font-weight: 600; line-height: 1.4; }
   .arka .cumle { font-weight: 500; }
-  .en { font-size: 17px; opacity: .8; }
   .ipucu { font-size: 14px; color: #9a97a8; }
   .ses { font-size: 26px; background: none; border: 2px solid #35353f; border-radius: 50%; width: 52px; height: 52px; color: inherit; }
   .alt { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
@@ -140,7 +139,7 @@ module.exports = async function ispanyolcaWidget({ veriAdresi }) {
 <div class="ust">🌮 ¡Hola! İspanyolca · <span id="no"></span></div>
 <div class="kart" id="kart"><div class="ic">
   <div class="yuz on"><div class="es" id="es"></div><button class="ses" id="ses">🔊</button><div class="cumle" id="cumle"></div><div class="ipucu">Türkçesi için dokun</div></div>
-  <div class="yuz arka"><div class="tr" id="tr"></div><div class="en" id="en"></div><div class="cumle" id="cumleTr"></div></div>
+  <div class="yuz arka"><div class="tr" id="tr"></div><div class="cumle" id="cumleTr"></div></div>
 </div></div>
 <div class="alt"><button class="d onceki" id="onceki">← Önceki</button><button class="d gec" id="gec">Geç →</button></div>
 <script>
@@ -153,7 +152,7 @@ module.exports = async function ispanyolcaWidget({ veriAdresi }) {
     const k = sira[i]; if (!(k.id in secim)) secim[k.id] = k.c && k.c.length ? k.c[Math.floor(Math.random() * k.c.length)] : null;
     const c = secim[k.id];
     $('kart').classList.remove('cevrik');
-    $('es').textContent = k.es; $('tr').textContent = k.tr; $('en').textContent = k.en ? '🇬🇧 ' + k.en : '';
+    $('es').textContent = k.es; $('tr').textContent = k.tr;
     $('cumle').textContent = c ? c[0] : ''; $('cumleTr').textContent = c ? c[1] : '';
     $('onceki').disabled = i === 0; $('no').textContent = liste.length + ' kelime';
   }

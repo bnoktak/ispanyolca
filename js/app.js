@@ -11,7 +11,6 @@
     { id: 'sinav', ad: 'Mini sınav', emoji: '✅' }
   ];
   const GECME_ORANI = 0.85;
-  const ingilizce = () => Depo.veri.ayarlar.ingilizce !== false;
   const TEKRAR_ADET = 15;
   const puanlamaAcik = () => Depo.veri.ayarlar.puanlama !== false;
 
@@ -460,7 +459,7 @@
           <div class="ilerleme"><div style="width:${(bilinen / toplam) * 100}%"></div></div><span class="sayac">${bilinen}/${toplam}</span></header>
         <div class="flip" tabindex="0"><div class="flip-ic">
           <div class="yuz on"><span class="es">${Alistirma.artikelHtml(k.es)}</span>${Ses.aktif() && Ses.okunurMu(k) ? '<button type="button" class="ses kart-ses" title="Dinle (S)">🔊</button>' : ''}<small>Çevirmek için dokun (boşluk)</small></div>
-          <div class="yuz arka"><span>${esc(k.tr)}</span>${k.en && ingilizce() ? `<span class="en">🇬🇧 ${esc(k.en)}</span>` : ''}${k.ipucu ? `<small>💡 ${esc(k.ipucu)}</small>` : ''}</div>
+          <div class="yuz arka"><span>${esc(k.tr)}</span>${k.ipucu ? `<small>💡 ${esc(k.ipucu)}</small>` : ''}</div>
         </div></div>
         <button class="ana-buton tam biliyorum">Sonraki →</button>`;
       const flip = kok.querySelector('.flip');
@@ -512,7 +511,7 @@
           <div class="yuz on"><span class="es">${Alistirma.artikelHtml(k.es)}</span>${sesli && Ses.okunurMu(k) ? '<button type="button" class="ses kart-ses" data-oku="kelime" title="Dinle (S)">🔊</button>' : ''}
             ${c ? `<p class="mini-cumle">${esc(c.es)}${sesli ? ' <button type="button" class="ses mini-ses" data-oku="cumle" title="Cümleyi dinle">🔊</button>' : ''}</p>` : ''}
             <small>Türkçesi için dokun</small></div>
-          <div class="yuz arka"><span>${esc(k.tr)}</span>${k.en && ingilizce() ? `<span class="en">🇬🇧 ${esc(k.en)}</span>` : ''}
+          <div class="yuz arka"><span>${esc(k.tr)}</span>
             ${c ? `<p class="mini-cumle">${esc(c.tr)}</p>` : ''}</div>
         </div></div>
         <div class="kart-butonlar"><button class="ikinci-buton onceki" ${i ? '' : 'disabled'}>← Önceki</button><button class="ana-buton gec">Geç →</button></div>
@@ -601,7 +600,6 @@
       if (s.bicim) ic += `<p class="bicim-satir">🔧 ${esc(s.bicim.fiil)} → ${Alistirma.bicimHtml(s.bicim.fiil, s.bicim.bicim, s.bicim.kisi)}</p>`;
       if (s.uyari) ic += `<p>${esc(s.uyari)} <b>${esc(s.dogrusu)}</b></p>`;
       else if (!s.dogru && s.dogrusu) ic += `<p>Doğrusu: <b>${esc(s.dogrusu)}</b></p>`;
-      if (s.en && ingilizce()) ic += `<p class="en">🇬🇧 ${esc(s.en)}</p>`;
       if (s.ipucu && !s.dogru) ic += `<p class="ipucu">💡 ${esc(s.ipucu)}</p>`;
       if (s.oku && Ses.otoOku()) {
         Ses.oku(s.oku);
@@ -644,7 +642,7 @@
         <ul>
           <li><b>${SINAV_ADET} soru</b>: ünitedeki <b>her kelime en az bir kez</b> sorulur, üstüne cümle soruları</li>
           <li>Sorular <b>Türkçeden İspanyolcaya</b>: tanımak değil, üretmek gerekiyor</li>
-          <li>Soru sırasında <b>doğru/yanlış gösterilmez</b>, ipucu ve İngilizce yok</li>
+          <li>Soru sırasında <b>doğru/yanlış gösterilmez</b>, ipucu yok</li>
           <li>Tüm cevapların ve doğruları <b>sınav sonunda</b> gösterilir</li>
           <li>Geçmek için <b>%${Math.round(GECME_ORANI * 100)}</b> (${Math.ceil(GECME_ORANI * SINAV_ADET)}/${SINAV_ADET}) gerekiyor</li>
         </ul>
@@ -782,10 +780,6 @@
         <p class="aciklama">Telefon modunda yazma soruları çoğunlukla şıklara, harf ve kelime taşlarına dönüşür (yaklaşık beşte biri yazma kalır). Bu ayar yalnızca bu cihazda geçerlidir.</p>
       </section>
       <section class="kutu">
-        <h3>🇬🇧 İngilizce karşılıklar</h3>
-        <label class="satir"><input type="checkbox" id="ingilizce" ${ingilizce() ? 'checked' : ''}> Kartlarda ve cevaptan sonra İngilizcesini de göster</label>
-      </section>
-      <section class="kutu">
         <h3>🔊 Sesli okuma</h3>
         ${Ses.sesVar() ? `
           <label class="satir"><input type="checkbox" id="ses-acik" ${Ses.ayar().ses !== false ? 'checked' : ''}> Sesli okuma ve dinleme alıştırmaları açık</label>
@@ -808,7 +802,6 @@
     kok.querySelector('#puanlama').addEventListener('change', (e) => { Depo.veri.ayarlar.puanlama = e.target.checked; Depo.kaydet(); });
     kok.querySelector('#telefon-modu').addEventListener('change', (e) => { Cihaz.koy('telefonModu', e.target.value); telefonSinifi(); });
     kok.querySelector('#rapor').addEventListener('click', raporEkrani);
-    kok.querySelector('#ingilizce').addEventListener('change', (e) => { Depo.veri.ayarlar.ingilizce = e.target.checked; Depo.kaydet(); });
     if (Ses.sesVar()) {
       const kaydetAyar = (k, v) => { Ses.ayar()[k] = v; Depo.kaydet(); };
       kok.querySelector('#ses-acik').addEventListener('change', (e) => kaydetAyar('ses', e.target.checked));
@@ -942,16 +935,23 @@
       ? `<td class="es sc">${sesli(o[0])}<br><span class="cevap">↳ ${sesli(o[1])}</span></td><td class="tr sc">${esc(o[2])}<br><span class="cevap">↳ ${esc(o[3])}</span></td>`
       : '<td class="bos">–</td><td class="bos"></td>';
     // 1) sabit tablolar (icerik/ozet.js)
-    const tablolar = (ICERIK.ozet || []).map((t) => {
-      const satirlar = t.satirlar.filter((s) => acikMi(s.at(-1)));
-      if (!satirlar.length) return '';
+    // 🔒 kilitli / yarı açık tablolar: hiç açık satırı olmayan tablo soluk kart, yarı açık tabloda kalan sayısı
+    const kilitKart = (id, baslik, uidler, adet, birim) => `<section class="kutu ozet-kutu kilitli-tablo" id="${id}"><h3>${baslik}</h3>
+      <p class="aciklama">🔒 Ünite ${Math.min(...uidler.map(sira))}'de açılır${adet ? ` · ${adet} ${birim || 'kelime'}` : ''}</p></section>`;
+    const kalanNot = (uidler, birim) => {
+      const kapali = uidler.filter((u) => !acikMi(u));
+      return kapali.length ? `<p class="kalan-not">🔒 +${kapali.length} ${birim || 'kelime'} · Ünite ${Math.min(...kapali.map(sira))}'den itibaren açılacak</p>` : '';
+    };
+    const tablolar = (ICERIK.ozet || []).map((t, ti) => {
+      const id = 'oz-t' + ti, satirlar = t.satirlar.filter((s) => acikMi(s.at(-1)));
+      if (!satirlar.length) return { id, ad: t.baslik, kilitli: true, html: kilitKart(id, t.baslik, t.satirlar.map((s) => s.at(-1)), t.satirlar.length, 'satır') };
       const esMi = (i) => (t.es ? t.es.includes(i) : t.sutunlar[0] === 'İspanyolca' ? i === 0 : i > 0);
       const orn = t.ornek ? ORN[t.ornek] || {} : null;   // tablo örnek soru–cevap sütunları alıyor mu?
-      return `<section class="kutu ozet-kutu"><h3>${t.baslik}</h3><table class="ozet-tablo">
+      return { id, ad: t.baslik, html: `<section class="kutu ozet-kutu" id="${id}"><h3>${t.baslik}</h3><div class="tablo-kaydir"><table class="ozet-tablo">
         <tr>${t.sutunlar.map((c) => `<th>${esc(c)}</th>`).join('')}${orn ? '<th>💬 sık duyacağın soru ↳ cevap</th><th>Türkçe</th>' : ''}<th></th></tr>
         ${satirlar.map((s) => `<tr>${s.slice(0, -1).map((c, i) => `<td class="${esMi(i) ? 'es' : ''}">${esMi(i) ? sesli(c) : satirli(c)}</td>`).join('')}${orn ? scHucre(ornek(orn[s[0]])) : ''}<td>${uniteEtiket(s.at(-1))}</td></tr>`).join('')}
-      </table></section>`;
-    }).join('');
+      </table></div>${kalanNot(t.satirlar.map((s) => s.at(-1)), 'satır')}</section>` };
+    });
     // 2) KİŞİ TABLOSU: her satır bir kişi; zamir + sahiplik + gustar + dönüşlü + tüm fiil çekimleri yan yana
     const KT = ICERIK.kisiTablosu;
     const kisiler = KT.kisiler.filter((x) => acikMi(x.uid));
@@ -1029,14 +1029,101 @@
     const kelimeHtml = `<section class="kutu ozet-kutu"><h3>📖 Tüm kelimeler (${uniteler.reduce((a, u) => a + u.kelimeler.filter((k) => k.yazma !== false).length, 0)})</h3>
       <input type="search" class="ozet-ara" placeholder="Ara: İspanyolca ya da Türkçe…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       ${uniteler.map((u) => `<details class="ozet-unite" ${u.sira === acikSira ? 'open' : ''}><summary>${u.emoji} ${u.sira}. ${esc(u.baslik)}</summary>
-        <table class="kelime-tablo">${u.kelimeler.filter((k) => k.yazma !== false).map((k) => `<tr data-ara="${esc((k.es + ' ' + k.tr + ' ' + (k.en || '')).toLocaleLowerCase('tr'))}"><td>${Ses.okunurMu(k) ? okuHtml(k.es, Alistirma.artikelHtml) : Alistirma.artikelHtml(k.es)}</td><td>${esc(k.tr)}</td></tr>`).join('')}</table>
+        <table class="kelime-tablo">${u.kelimeler.filter((k) => k.yazma !== false).map((k) => `<tr data-ara="${esc((k.es + ' ' + k.tr).toLocaleLowerCase('tr'))}"><td>${Ses.okunurMu(k) ? okuHtml(k.es, Alistirma.artikelHtml) : Alistirma.artikelHtml(k.es)}</td><td>${esc(k.tr)}</td></tr>`).join('')}</table>
       </details>`).join('')}</section>`;
+    /* ---------- 🗂️ KELİME GRUPLARI (ICERIK.temalar, icerik/ozet.js) ---------- */
+    const esHucre = (k, on) => (Ses.okunurMu(k) ? okuHtml(k.es, (t) => (on || '') + Alistirma.artikelHtml(t)) : (on || '') + Alistirma.artikelHtml(k.es));
+    // eril / dişil farkı: médic[o] · médic[a] (değişen son kısım renkli)
+    const farkHtml = (a, b) => {
+      let p = 0; while (p < a.length && p < b.length && a[p] === b[p]) p++;
+      if (p < 2) return [esc(a), esc(b)];
+      return [`<span class="ortak">${esc(a.slice(0, p))}</span><span class="art-e">${esc(a.slice(p))}</span>`, `<span class="ortak">${esc(b.slice(0, p))}</span><span class="art-d">${esc(b.slice(p))}</span>`];
+    };
+    // zıt anlamlılarda yalnızca ilk (eril) biçim: "abierto / abierta" → abierto
+    const esIlk = (k) => { const e = k.es.split(' / ')[0]; return Ses.okunurMu(k) ? `<span class="oku" data-ses="${esc(e)}" title="Dinlemek için tıkla">${Alistirma.artikelHtml(e)}</span>` : Alistirma.artikelHtml(e); };
+    const okuSar = (metin, ic) => (Ses.aktif() ? `<span class="oku" data-ses="${esc(metin)}" title="Dinlemek için tıkla">${ic}</span>` : ic);
+    const temaBolumleri = (t) => (t.bolumler || []).map((b) => {
+      let ids = b.kelimeler || (((ICERIK.bul(b.grup[0]) || {}).gruplar || []).find((g) => g[0] === b.grup[1]) || [null, []])[1].map((s) => `${b.grup[0]}_${s}`);
+      ids = ids.filter((i) => !(b.haric || []).includes(i));
+      return { ad: b.ad, k: ids.map((i) => ICERIK.kelime(i)).filter(Boolean) };
+    });
+    const temaHtml = (t) => {
+      const id = 'tm-' + t.id, bol = temaBolumleri(t);
+      const ciftler = (t.ciftler || []).map((c) => c.map((i) => ICERIK.kelime(i))).filter((c) => c.every(Boolean));
+      const tekler = (t.tekler || []).map((i) => ICERIK.kelime(i)).filter(Boolean);
+      const tumK = [...bol.flatMap((b) => b.k), ...ciftler.flat(), ...tekler];
+      const uidler = [...tumK.map((k) => k.unite), ...(t.ornekler || []).map((o) => o[2])];
+      if (!tumK.some((k) => acikMi(k.unite))) return { id, ad: t.baslik, kilitli: true, html: kilitKart(id, t.baslik, uidler, tumK.length) };
+      const acik = (k) => acikMi(k.unite);
+      let ic = '';
+      if (t.bicim === 'sayi') {
+        ic = bol.map((b) => { const k = b.k.filter(acik); return k.length ? `<h5>${esc(b.ad)}</h5><div class="sayi-izgara">${k.map((x) => {
+          const r = (t.rakamlar || {})[x.id] || (/^[\d.]+/.exec(x.tr) || [x.tr])[0];
+          return `<div class="sayi-hucre"><b>${esc(r)}</b>${esHucre(x)}</div>`; }).join('')}</div>` : ''; }).join('');
+      } else if (t.bicim === 'cift') {
+        const satir = (tr, e, d, k) => `<tr><td class="tr">${esc(tr)}</td>${d === null ? `<td class="es" colspan="2">${e}</td>` : `<td class="es">${e}</td><td class="es">${d}</td>`}<td>${uniteEtiket(k.unite)}</td></tr>`;
+        let rows = bol.flatMap((b) => b.k.filter(acik)).map((k) => {
+          const [e, d] = k.es.split(' / ');
+          if (!d) return satir(k.tr, esHucre(k), null, k);
+          const [eh, dh] = farkHtml(e, d);
+          return satir(k.tr, okuSar(e, eh), okuSar(d, dh), k);
+        }).join('');
+        rows += ciftler.filter((c) => c.every(acik)).map(([a, b]) => {
+          const ea = a.es.replace(/^(el|la) /, ''), eb = b.es.replace(/^(el|la) /, '');
+          const [eh, dh] = farkHtml(ea, eb);
+          return satir(`${a.tr} / ${b.tr}`, okuSar(a.es, `<span class="art-e">${esc(a.es.split(' ')[0])}</span> ${eh}`), okuSar(b.es, `<span class="art-d">${esc(b.es.split(' ')[0])}</span> ${dh}`), a);
+        }).join('');
+        rows += tekler.filter(acik).map((k) => satir(k.tr, esHucre(k), null, k)).join('');
+        ic = `<table class="ozet-tablo tema-cift"><tr><th>Türkçe</th><th class="art-e">♂ eril</th><th class="art-d">♀ dişil</th><th></th></tr>${rows}</table>`;
+      } else if (t.bicim === 'zit') {
+        ic = `<table class="ozet-tablo tema-zit">${ciftler.filter((c) => c.every(acik)).map(([a, b]) =>
+          `<tr><td class="es">${esIlk(a)}<small>${esc(a.tr)}</small></td><td class="zit-ok">↔</td><td class="es">${esIlk(b)}<small>${esc(b.tr)}</small></td></tr>`).join('')}</table>`;
+      } else if (t.bicim === 'renk') {
+        ic = `<table class="ozet-tablo tema-renk">${bol.flatMap((b) => b.k.filter(acik)).map((k) => {
+          const [e, d] = k.es.split(' / '), fark = d ? farkHtml(e, d) : null;
+          return `<tr><td><span class="renk-kare" style="background:${(t.renkler || {})[k.id] || 'transparent'}"></span></td><td class="es">${fark ? `${okuSar(e, fark[0])} · ${okuSar(d, fark[1])}` : esHucre(k)}</td><td class="tr">${esc(k.tr)}</td><td>${uniteEtiket(k.unite)}</td></tr>`; }).join('')}</table>`;
+      } else {   // liste, saat
+        ic = bol.map((b) => { const k = b.k.filter(acik); return k.length ? `${b.ad ? `<h5>${esc(b.ad)}</h5>` : ''}<table class="ozet-tablo tema-liste">${k.map((x) =>
+          `<tr><td class="es">${esHucre(x, t.simge && t.simge[x.id] ? `<span class="simge">${t.simge[x.id]}</span> ` : '')}</td><td class="tr">${esc(x.tr)}</td><td>${uniteEtiket(x.unite)}</td></tr>`).join('')}</table>` : ''; }).join('');
+        const orn = (t.ornekler || []).filter((o) => acikMi(o[2]));
+        if (orn.length) ic += `<h5>Örnekler</h5><table class="ozet-tablo tema-saat">${orn.map((o) => `<tr><td class="saat-rakam">${esc(o[0])}</td><td class="es">${sesli(o[1])}</td></tr>`).join('')}</table>`;
+      }
+      return { id, ad: t.baslik, html: `<section class="kutu ozet-kutu tema tema-${t.bicim}" id="${id}"><h3>${t.baslik}</h3>${ic}${kalanNot(uidler.filter((u, i) => i < tumK.length), 'kelime')}</section>` };
+    };
+
+    /* ---------- SEKMELER: 📐 Dilbilgisi · 🗂️ Kelime grupları · 📖 Tüm kelimeler (son seçim bu cihazda) ---------- */
+    const SEKMELER = [['dilbilgisi', '📐 Dilbilgisi'], ['gruplar', '🗂️ Gruplar'], ['kelimeler', '📖 Kelimeler']];
+    const sekme = SEKMELER.some(([s]) => s === Cihaz.al('ozetSekme')) ? Cihaz.al('ozetSekme') : 'dilbilgisi';
+    const gorunumSec = `<div class="gorunum-sec"><button type="button" data-gorunum="tablo" class="${gorunum === 'tablo' ? 'secili' : ''}">📊 Tablo</button><button type="button" data-gorunum="kartlar" class="${gorunum === 'kartlar' ? 'secili' : ''}">👤 Kartlar</button></div>`;
+    const sahipUid = (ORN.sahip || []).map((x) => x[3]);
+    const fiilUid = Object.values(ORN.fiil || {}).flatMap((v) => (Array.isArray(v[0]) ? v : [v]).map((o) => o[2]));
+    let bolumler;
+    if (sekme === 'dilbilgisi') {
+      bolumler = [
+        kisiler.length ? { id: 'oz-kisi', ad: '🧑 Kişiler', html: `<div id="oz-kisi">${gorunumSec}${kisiBolum}</div>` }
+          : { id: 'oz-kisi', ad: '🧑 Kişiler', kilitli: true, html: kilitKart('oz-kisi', '🧑 Kişilere göre: zamir, sahiplik, fiiller', KT.kisiler.map((x) => x.uid), 0) },
+        sahipHtml ? { id: 'oz-sahip', ad: '👜 Sahiplik', html: `<div id="oz-sahip">${sahipHtml}</div>` }
+          : { id: 'oz-sahip', ad: '👜 Sahiplik', kilitli: true, html: kilitKart('oz-sahip', '👜 Sahiplikle basit cümleler', sahipUid, sahipUid.length, 'cümle') },
+        fiilOrnHtml ? { id: 'oz-fiil', ad: '💬 Fiil cümleleri', html: `<div id="oz-fiil">${fiilOrnHtml}</div>` }
+          : { id: 'oz-fiil', ad: '💬 Fiil cümleleri', kilitli: true, html: kilitKart('oz-fiil', '💬 Her fiille bir cümle', fiilUid, fiilUid.length, 'cümle') },
+        ...tablolar
+      ];
+    } else if (sekme === 'gruplar') bolumler = (ICERIK.temalar || []).map(temaHtml);
+    else bolumler = [{ id: 'oz-kelimeler', ad: '📖 Tüm kelimeler', html: kelimeHtml }];
     kok.innerHTML = `
       <header class="ust"><button class="ikon geri">←</button><div class="ust-baslik">📚 Özet tablolar</div><span></span></header>
+      <nav class="ozet-sekmeler">${SEKMELER.map(([s, a]) => `<button type="button" data-sekme="${s}" class="${s === sekme ? 'secili' : ''}">${a}</button>`).join('')}</nav>
       <p class="aciklama">Ünite ${acikSira}’e kadar öğrendiklerin. Yeni ünite açtıkça tablolar büyür. <b>Ü</b> = öğretildiği ünite.</p>
-      ${kisiler.length ? `<div class="gorunum-sec"><button type="button" data-gorunum="tablo" class="${gorunum === 'tablo' ? 'secili' : ''}">📊 Tablo</button><button type="button" data-gorunum="kartlar" class="${gorunum === 'kartlar' ? 'secili' : ''}">👤 Kartlar</button></div>` : ''}
-      ${kisiBolum}${sahipHtml}${fiilOrnHtml}${tablolar}${kelimeHtml}`;
+      ${sekme !== 'kelimeler' ? `<nav class="ozet-etiketler">${bolumler.map((b) => `<button type="button" data-bolum="${b.id}" class="${b.kilitli ? 'kilitli' : ''}">${b.kilitli ? '🔒 ' : ''}${esc(b.ad.replace(/^\S+\s/, ''))}</button>`).join('')}</nav>` : ''}
+      ${bolumler.map((b) => b.html).join('')}`;
     kok.classList.add('genis');
+    kok.querySelectorAll('[data-sekme]').forEach((b) => b.addEventListener('click', () => {
+      if (b.dataset.sekme === sekme) return;
+      Cihaz.koy('ozetSekme', b.dataset.sekme); ozetEkrani(); scrollTo(0, 0);
+    }));
+    kok.querySelectorAll('[data-bolum]').forEach((b) => b.addEventListener('click', () => {
+      const h = document.getElementById(b.dataset.bolum); if (h) h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }));
     kok.querySelector('.geri').addEventListener('click', () => { kok.classList.remove('genis'); anaEkran(); });
     const okuBagla = (kapsam) => kapsam.querySelectorAll('.oku').forEach((b) => b.addEventListener('click', () => {
       Ses.oku(b.dataset.ses); b.classList.add('caliyor'); setTimeout(() => b.classList.remove('caliyor'), 700);
@@ -1054,7 +1141,7 @@
     }));
     kisiBagla();
     const ara = kok.querySelector('.ozet-ara');
-    ara.addEventListener('input', () => {
+    if (ara) ara.addEventListener('input', () => {
       const q = ara.value.trim().toLocaleLowerCase('tr');
       kok.querySelectorAll('.ozet-unite').forEach((d) => {
         let n = 0;

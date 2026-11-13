@@ -373,7 +373,7 @@
               else if (j === i) b.classList.add('yanlis');
             });
             Tekrar.sonuc(kelime.id, dogru);
-            bitti({ dogru, dogrusu: `${kelime.es} = ${kelime.tr}`, ipucu: kelime.ipucu, en: kelime.en, oku: Ses.okunurMu(kelime) ? kelime.es : null, soru: kelime[soruAlan], verilen: siklar[i][cevapAlan] });
+            bitti({ dogru, dogrusu: `${kelime.es} = ${kelime.tr}`, ipucu: kelime.ipucu, oku: Ses.okunurMu(kelime) ? kelime.es : null, soru: kelime[soruAlan], verilen: siklar[i][cevapAlan] });
           };
           alan.querySelectorAll('.sik').forEach((b) => b.addEventListener('click', () => sec(+b.dataset.i)));
           alan._tus = (e) => { const n = +e.key; if (n >= 1 && n <= siklar.length) sec(n - 1); };
@@ -401,7 +401,7 @@
             const s = kontrol(input.value, kelime.es);
             input.classList.add(s.dogru ? 'dogru' : 'yanlis');
             Tekrar.sonuc(kelime.id, s.dogru);
-            bitti({ dogru: s.dogru, uyari: s.uyari, dogrusu: kelime.es, ipucu: kelime.ipucu, en: kelime.en, oku: kelime.es, soru: kelime.tr, verilen: input.value.trim() });
+            bitti({ dogru: s.dogru, uyari: s.uyari, dogrusu: kelime.es, ipucu: kelime.ipucu, oku: kelime.es, soru: kelime.tr, verilen: input.value.trim() });
           });
         }
       };
@@ -441,7 +441,7 @@
             const s = kontrol(verilen, kelime.es, false);
             satir.classList.add(s.dogru ? 'dogru' : 'yanlis');
             Tekrar.sonuc(kelime.id, s.dogru);
-            bitti({ dogru: s.dogru, uyari: s.uyari, dogrusu: kelime.es, ipucu: kelime.ipucu, en: kelime.en, oku: kelime.es, soru: kelime.tr, verilen });
+            bitti({ dogru: s.dogru, uyari: s.uyari, dogrusu: kelime.es, ipucu: kelime.ipucu, oku: kelime.es, soru: kelime.tr, verilen });
           };
           kontrolB.addEventListener('click', bitir);
           // klavyeyle de çalışsın: harfe basınca o taş, ⌫ son taşı geri alır, Enter kontrol eder
@@ -481,7 +481,7 @@
           setTimeout(() => cal(false), 300);
           const sonuc = (dogru, ek) => {
             Tekrar.sonuc(kelime.id, dogru);
-            bitti(Object.assign({ dogru, dogrusu: `${kelime.es} = ${kelime.tr}`, ipucu: kelime.ipucu, en: kelime.en, oku: kelime.es, soru: mod === 'sec' ? '🎧 Duyduğun kelimenin anlamı' : '🎧 Duyduğun kelimeyi yaz' }, ek || {}));
+            bitti(Object.assign({ dogru, dogrusu: `${kelime.es} = ${kelime.tr}`, ipucu: kelime.ipucu, oku: kelime.es, soru: mod === 'sec' ? '🎧 Duyduğun kelimenin anlamı' : '🎧 Duyduğun kelimeyi yaz' }, ek || {}));
           };
           if (mod === 'sec') {
             let bitmis = false;

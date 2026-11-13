@@ -212,9 +212,6 @@ button:disabled { cursor: default; }
 .satir select { flex: 1; min-width: 0; font: inherit; background: var(--zemin); color: var(--yazi); border: 1px solid var(--cizgi); border-radius: 8px; padding: 4px 8px; max-width: 100%; }
 .satir input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--ana); }
 
-/* ---------- ingilizce ---------- */
-.yuz .en { font-size: 18px; font-weight: 600; opacity: .8; }
-.geribildirim .en { font-size: 14px; opacity: .85; }
 
 /* ---------- boşluk doldurma / diyalog ---------- */
 .diyalog { background: var(--kart); border-radius: var(--r); padding: 14px 18px; box-shadow: var(--golge); margin-bottom: 10px; font-size: 19px; line-height: 2.1; }
@@ -473,6 +470,36 @@ body.telefon .puanla button { flex: 1; min-height: 46px; font-size: 16px; font-w
 /* artikel renkleri: el / los mavi, la / las pembe-kırmızı */
 .art-e { color: #6db3ff; font-weight: 700; } .art-d { color: #ff7aa2; font-weight: 700; }
 .yuz.on .es .art-e, .yuz.on .es .art-d { font-weight: 800; }
+
+/* 📚 özet: sekmeler, atlama etiketleri, kilitli kartlar */
+.ozet-sekmeler { position: sticky; top: 0; z-index: 20; display: flex; gap: 6px; padding: 8px 0; margin: 0 0 6px; background: var(--zemin);
+  top: env(safe-area-inset-top); }
+.ozet-sekmeler button { flex: 1; padding: 10px 6px; border-radius: 12px; background: var(--kart); border: 2px solid var(--cizgi); font-weight: 700; font-size: 15px; color: var(--soluk); }
+.ozet-sekmeler button.secili { border-color: var(--ana); color: var(--yazi); background: var(--ana-acik); }
+.ozet-etiketler { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.ozet-etiketler button { padding: 6px 12px; border-radius: 999px; background: var(--kart); border: 1px solid var(--cizgi); font-size: 14px; font-weight: 600; }
+.ozet-etiketler button.kilitli { color: var(--soluk); opacity: .6; }
+.ozet-kutu { scroll-margin-top: 70px; }
+#oz-kisi, #oz-sahip, #oz-fiil { scroll-margin-top: 70px; }
+.kilitli-tablo { opacity: .5; padding-top: 12px; padding-bottom: 12px; }
+.kilitli-tablo h3 { color: var(--soluk); margin-bottom: 2px; }
+.kilitli-tablo .aciklama { margin: 0; }
+.kalan-not { color: var(--soluk); font-size: 13px; margin: 8px 0 0; }
+.tema h5 { margin: 14px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--soluk); }
+.tema h5:first-of-type { margin-top: 4px; }
+/* sayı ızgarası */
+.sayi-izgara { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+.sayi-hucre { background: var(--zemin); border-radius: 10px; padding: 8px 6px; text-align: center; font-size: 15px; }
+.sayi-hucre b { display: block; font-size: 22px; color: var(--ana); line-height: 1.2; }
+/* zıt anlamlılar, renkler, saat */
+.tema-zit td { vertical-align: top; }
+.tema-zit td.es small { display: block; color: var(--soluk); font-size: 13px; font-weight: 400; }
+.tema-zit .zit-ok { text-align: center; color: var(--soluk); font-size: 18px; width: 30px; }
+.renk-kare { display: inline-block; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--cizgi); vertical-align: middle; }
+.tema-renk td:first-child { width: 36px; }
+.saat-rakam { font-weight: 800; color: var(--ana); width: 64px; font-size: 17px; }
+.tema-cift th { font-size: 13px; }
+.simge { display: inline-block; width: 24px; }
 
 /* 🏆 büyük sınav */
 .unite.buyuk { border: 2px solid #5c4a1c; background: linear-gradient(135deg, #2a2516, var(--kart)); }

@@ -141,3 +141,80 @@ ICERIK.ornekler = {
     '¿por qué?': ['¿Por qué estás en Colombia?', 'Estoy de vacaciones.', 'Neden Kolombiya\'dasın?', 'Tatildeyim.', 'u12']
   }
 };
+
+/* =========================================================
+   🗂️ KELİME GRUPLARI (Özet tablolar → "Kelime grupları" sekmesi)
+   Ünitelerdeki gruplardan kurulur; her kelime kendi ünitesi açılınca görünür, hiç açık kelimesi olmayan
+   tablo kilitli kart olarak durur. Yeni kelime eklenmez.
+   bolumler: [{ ad, grup: [ünite, 'grup adı'] | kelimeler: [kelimeId…], haric: [kelimeId…] }]
+   bicim:
+     liste : İspanyolca · Türkçe (simge: { kelimeId: '➡️' } isteğe bağlı)
+     cift  : Türkçe · eril · dişil ("médico / médica" ya da ciftler: [[erilId, dişilId]], tekler: [kelimeId])
+     zit   : ciftler: [[id, id]] → yan yana zıt anlamlılar
+     renk  : renk karesi (renkler: { kelimeId: '#rrggbb' }) · İspanyolca · Türkçe
+     sayi  : ızgara (rakam + yazı)
+     saat  : liste + ornekler: [['3:15', 'Son las tres y cuarto.', 'u10'], …]
+   ========================================================= */
+ICERIK.temalar = [
+  { id: 'sayilar', baslik: '🔢 Sayılar', bicim: 'sayi', bolumler: [
+    { ad: '0–10', grup: ['u03', 'Sayılar 0–10'] },
+    { ad: '11–20', grup: ['u03', 'Sayılar 11–20'] },
+    { ad: '21–29: veinti + sayı', grup: ['u09', '21–29'] },
+    { ad: 'Onlar', grup: ['u09', 'Onluklar'] },
+    { ad: '31 ve sonrası: onlar + y + sayı', grup: ['u09', 'Bileşik sayılar'] },
+    { ad: 'Binler', kelimeler: ['u09_mil', 'u09_dosmil', 'u09_cincomil', 'u09_diezmil', 'u09_cienmil', 'u09_millon'] }
+  ], rakamlar: { u09_mil: '1.000', u09_dosmil: '2.000', u09_cincomil: '5.000', u09_diezmil: '10.000', u09_cienmil: '100.000', u09_millon: '1.000.000' } },
+  { id: 'milliyet', baslik: '🌎 Milliyetler', bicim: 'cift', bolumler: [{ grup: ['u04', 'Milliyet'], haric: ['u04_pais'] }] },
+  { id: 'meslek', baslik: '👩‍⚕️ Meslekler', bicim: 'cift', bolumler: [{ grup: ['u04', 'Meslekler'], haric: ['u04_dedicas'] }] },
+  { id: 'renk', baslik: '🎨 Renkler', bicim: 'renk', bolumler: [{ grup: ['u15', 'Renkler'], haric: ['u15_color'] }],
+    renkler: { u15_rojo: '#e53935', u15_azul: '#1e88e5', u15_verde: '#43a047', u15_amarillo: '#fdd835', u15_negro: '#111111',
+      u15_blanco: '#fafafa', u15_naranja: '#fb8c00', u15_rosa: '#f48fb1', u15_cafe: '#795548' } },
+  { id: 'zit', baslik: '⚖️ Zıt anlamlılar', bicim: 'zit', ciftler: [
+    ['u02_bien', 'u02_mal'], ['u04_grande', 'u04_pequeno'], ['u05_abierto', 'u05_cerrado'], ['u05_limpio', 'u05_sucio'],
+    ['u07_siempre', 'u07_nunca'], ['u10_temprano', 'u10_tardeadv'], ['u11_cerca', 'u11_lejos'],
+    ['u15_nuevo', 'u15_viejo'], ['u15_bonito', 'u15_feo'], ['u15_alto', 'u15_bajo'], ['u15_caro', 'u15_barato'],
+    ['u15_bueno', 'u15_malo'], ['u15_facil', 'u15_dificil'], ['u15_largo', 'u15_corto'], ['u15_mejor', 'u15_peor']
+  ] },
+  { id: 'zaman', baslik: '🗓️ Zaman', bicim: 'liste', bolumler: [
+    { ad: 'Şimdi, bugün, yarın', kelimeler: ['u05_ahora', 'u05_hoy', 'u19_manana', 'u19_ayer', 'u10_despues', 'u10_mastarde', 'u10_todavia', 'u10_enseguida'] },
+    { ad: 'Ne sıklıkla?', kelimeler: ['u07_siempre', 'u26_normalmente', 'u26_aveces', 'u07_nunca'] },
+    { ad: 'Günün bölümleri', kelimeler: ['u26_pormanana', 'u26_portarde', 'u26_pornoche', 'u10_mediodia', 'u10_medianoche'] },
+    { ad: 'Haftanın günleri', grup: ['u19', 'Haftanın günleri'] },
+    { ad: 'Aylar', grup: ['u19', 'Aylar'] },
+    { ad: 'Mevsimler', grup: ['u27', 'Mevsimler'] },
+    { ad: 'Zaman birimleri', grup: ['u19', 'Zaman birimleri'] }
+  ] },
+  { id: 'saat', baslik: '🕐 Saat', bicim: 'saat', bolumler: [
+    { ad: 'Sormak', grup: ['u10', 'Saati sormak'] },
+    { ad: 'Söylemek', grup: ['u10', 'Saati söylemek'] }
+  ], ornekler: [
+    ['1:00', 'Es la una.', 'u10'], ['2:00', 'Son las dos en punto.', 'u10'], ['3:15', 'Son las tres y cuarto.', 'u10'],
+    ['3:30', 'Son las tres y media.', 'u10'], ['3:45', 'Son las cuatro menos cuarto.', 'u10'], ['10:20', 'Son las diez y veinte.', 'u10']
+  ] },
+  { id: 'yon', baslik: '🧭 Yön ve konum', bicim: 'liste', bolumler: [
+    { ad: 'Yönler', grup: ['u11', 'Yönler'] },
+    { ad: 'Konum', grup: ['u11', 'Konum'] }
+  ], simge: { u11_derecha: '➡️', u11_izquierda: '⬅️', u11_derecho: '⬆️', u11_doble: '↪️', u11_siga: '⏩', u11_cerca: '📍',
+    u11_lejos: '🔭', u11_lado: '↔️', u11_enfrente: '🔁', u11_esquina: '📐', u11_calle: '🛣️' } },
+  { id: 'aile', baslik: '👨‍👩‍👧 Aile', bicim: 'cift', ciftler: [
+    ['u20_padre', 'u20_madre'], ['u20_hermano', 'u20_hermana'], ['u20_hijo', 'u20_hija'], ['u20_abuelo', 'u20_abuela'],
+    ['u20_esposo', 'u20_esposa'], ['u20_tio', 'u20_tia'], ['u20_nino', 'u20_nina']
+  ], tekler: ['u20_familia', 'u20_padres', 'u20_bebe'] },
+  { id: 'yemek', baslik: '🍽️ Yiyecek ve içecek', bicim: 'liste', bolumler: [
+    { ad: 'İlk kelimeler', grup: ['u01', 'Yiyecek-içecek'] },
+    { ad: 'İçecekler', grup: ['u06', 'İçecekler'] },
+    { ad: 'Yemekler', grup: ['u06', 'Yemekler'] },
+    { ad: 'Meyveler', grup: ['u22', 'Meyveler'] },
+    { ad: 'Sebzeler', grup: ['u22', 'Sebzeler'] },
+    { ad: 'Temel gıdalar', grup: ['u22', 'Temel gıdalar'] }
+  ] },
+  { id: 'vucut', baslik: '🩺 Vücut ve sağlık', bicim: 'liste', bolumler: [
+    { ad: 'Vücut', grup: ['u17', 'Vücut'] },
+    { ad: 'Ağrılar ve hastalık', grup: ['u17', 'Ağrılar ve hastalık'] }
+  ] },
+  { id: 'hava', baslik: '☀️ Hava ve mevsimler', bicim: 'liste', bolumler: [
+    { ad: 'Hava nasıl?', grup: ['u27', 'Hava nasıl?'] },
+    { ad: 'Kelimeler', grup: ['u27', 'Hava ile ilgili kelimeler'] },
+    { ad: 'Mevsimler', grup: ['u27', 'Mevsimler'] }
+  ] }
+];
