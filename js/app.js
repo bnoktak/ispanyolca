@@ -30,8 +30,17 @@
   function uniteAcikMi(i) {
     if (i === 0) return true;
     const onceki = ICERIK.uniteler[i - 1];
-    return !!(Depo.veri.uniteler[onceki.id] && Depo.veri.uniteler[onceki.id].tamamlandi);
+    if (!(Depo.veri.uniteler[onceki.id] && Depo.veri.uniteler[onceki.id].tamamlandi)) return false;
+    // 🏆 blok sonu (5, 10, 15, 20): büyük sınav geçilmeden sonraki ünite açılmaz.
+    // Zaten başlanmış bir ünite (eski ilerleme) kilitlenmez.
+    const b = Alistirma.buyukSinavSonu(onceki.id);
+    if (!b || buyukGecildi(b)) return true;
+    const bu = Depo.veri.uniteler[ICERIK.uniteler[i].id];
+    return !!(bu && Object.values(bu.adimlar || {}).some(Boolean));
   }
+  const buyukGecildi = (b) => !!(Depo.veri.uniteler[b.id] && Depo.veri.uniteler[b.id].tamamlandi);
+  // büyük sınav kartı: bloğun son ünitesinin mini sınavı geçilince açılır
+  const buyukAcikMi = (b) => { const son = ICERIK.uniteler.find((u) => u.sira === b.son); return !!(son && Depo.veri.uniteler[son.id] && Depo.veri.uniteler[son.id].tamamlandi); };
   function adimAcikMi(uid, adimIndex) {
     if (adimIndex === 0) return true;
     const ilr = uniteIlerleme(uid);
@@ -99,7 +108,7 @@
       <div class="yol ek-yol">${ICERIK.ekler.map((u) => uniteButon(u, true)).join('')}</div>` : ''}
       <h2 class="baslik2">Üniteler</h2>
       <div class="yol">
-        ${ICERIK.uniteler.map((u, i) => uniteButon(u, uniteAcikMi(i))).join('')}
+        ${ICERIK.uniteler.map((u, i) => { const b = Alistirma.buyukSinavSonu(u.id); return uniteButon(u, uniteAcikMi(i)) + (b ? buyukSinavButon(b) : ''); }).join('')}
       </div>
       <footer class="alt">${kayitDurumYazisi()}</footer>`;
 
@@ -108,6 +117,78 @@
     kok.querySelectorAll('[data-git="ozet"]').forEach((b) => b.addEventListener('click', () => ozetEkrani()));
     kok.querySelectorAll('[data-git="mini"]').forEach((b) => b.addEventListener('click', () => miniKart()));
     kok.querySelectorAll('[data-unite]').forEach((b) => b.addEventListener('click', () => uniteEkrani(b.dataset.unite)));
+    kok.querySelectorAll('[data-buyuk]').forEach((x) => x.addEventListener('click', () => buyukSinavGiris(Alistirma.BUYUK_SINAVLAR.find((b) => b.id === x.dataset.buyuk))));
+  }
+
+  /* =========================================================
+     🏆 BÜYÜK SINAV (her 5 ünitede bir; soru üretici Alistirma.buyukSinav)
+     ========================================================= */
+  function buyukSinavButon(b) {
+    const acik = buyukAcikMi(b), ilr = Depo.veri.uniteler[b.id] || {}, gecti = !!ilr.tamamlandi;
+    return `
+          <button class="unite buyuk ${acik ? '' : 'kilitli'} ${gecti ? 'bitti' : ''}" data-buyuk="${b.id}" ${acik ? '' : 'disabled'}>
+            <div class="unite-emoji">${acik ? '🏆' : '🔒'}</div>
+            <div class="unite-bilgi">
+              <small>Büyük sınav ${b.no}</small>
+              <b>Ünite ${b.bas}–${b.son} tekrarı</b>
+              <span>${gecti ? `Geçtin · en iyi %${Math.round((ilr.enIyiSkor || 0) * 100)}` : acik ? `Geçince Ünite ${b.son + 1}${b.son < 27 ? ' açılır' : ''}` : `Ünite ${b.son} mini sınavını geçince açılır`}</span>
+            </div>
+            <div class="unite-sag">${gecti ? '⭐' : ''}</div>
+          </button>`;
+  }
+
+  function buyukSinavGiris(b) {
+    tusAyarla(null);
+    ustSiraGuncelle();
+    const ilr = Depo.veri.uniteler[b.id] || {}, liste = Alistirma.buyukSinav(b), adet = liste.length, oran = Alistirma.BUYUK_GECME;
+    kok.innerHTML = `
+      <header class="ust"><button class="ikon geri">←</button><div class="ust-baslik">🏆 Büyük sınav ${b.no}</div><span></span></header>
+      <section class="kutu sinav-kural">
+        <h3>Ünite ${b.bas}–${b.son}</h3>
+        <ul>
+          <li><b>${adet} soru</b>, çoğu <b>🎧 uzun dinleme</b>: gerçek bir durumdan konuşma dinlersin (🔊 tekrar ve 🐢 yavaş serbest)</li>
+          <li>Her sahnede iki soru: <b>ne anladın?</b> ve <b>ne cevap verirsin?</b>${b.bas > 1 ? ' Bir kısmı önceki bloklardan.' : ''}</li>
+          <li>Birkaç kısa üretim sorusu: kelime, çekim, cümle (zor bulduğun kelimeler önce)</li>
+          <li>Soru sırasında <b>doğru/yanlış gösterilmez</b>; sonunda ünite ünite sonucun ve yanlışların gelir</li>
+          <li>Geçmek için <b>%${Math.round(oran * 100)}</b> (${Math.ceil(oran * adet)}/${adet})${b.son < 27 ? `; geçince Ünite ${b.son + 1} açılır` : ''}</li>
+        </ul>
+        ${ilr.enIyiSkor ? `<p class="aciklama">En iyi sonucun: %${Math.round(ilr.enIyiSkor * 100)}</p>` : ''}
+      </section>
+      <button class="ana-buton tam basla">Sınava başla →</button>`;
+    kok.querySelector('.geri').addEventListener('click', anaEkran);
+    kok.querySelector('.basla').addEventListener('click', () => {
+      oturum({ baslik: `Büyük sınav ${b.no}`, sinav: true, liste, geri: anaEkran, bitince: (d, t, k) => buyukSinavBitti(b, d, t, k, liste) });
+    });
+  }
+
+  function buyukSinavBitti(b, d, t, kayitlar, liste) {
+    const ilr = uniteIlerleme(b.id), oran = d / t, gecti = oran >= Alistirma.BUYUK_GECME - 1e-9;
+    ilr.enIyiSkor = Math.max(ilr.enIyiSkor || 0, oran);
+    const yeniAcildi = gecti && !ilr.tamamlandi;
+    if (gecti) { ilr.adimlar.sinav = true; ilr.tamamlandi = true; }
+    Depo.kaydet();
+    // ünite ünite sonuç (yanlış kelimeler soru sırasında zaten tekrar listesinde başa döndü)
+    const uniteSonuc = {};
+    kayitlar.forEach((k) => { const u = (k.kayit && k.kayit.u) || (liste[k.no - 1] && liste[k.no - 1].unite) || '?'; const x = uniteSonuc[u] || (uniteSonuc[u] = { d: 0, t: 0 }); x.t++; if (k.dogru) x.d++; });
+    const sonraki = ICERIK.uniteler.find((u) => u.sira === b.son + 1);
+    sonucEkrani({
+      dogru: d, toplam: t, gecmeOrani: Alistirma.BUYUK_GECME,
+      baslik: gecti ? `Büyük sınav ${b.no} geçildi! 🏆` : 'Henüz olmadı',
+      mesaj: gecti ? (yeniAcildi && sonraki ? `Yeni ünite açıldı: ${sonraki.emoji} ${sonraki.baslik}` : 'Harika iş.') : `Geçmek için %${Math.round(Alistirma.BUYUK_GECME * 100)} gerekiyor. Aşağıda en zayıf ünitelerin ve yanlışların var; yanlış kelimeler Tekrar'da önüne gelecek.`,
+      geri: anaEkran,
+      ileri: gecti && sonraki ? { ad: `${sonraki.emoji} Ünite ${sonraki.sira}'e geç →`, fn: () => uniteEkrani(sonraki.id) } : null,
+      ek: uniteTablosu(uniteSonuc),
+      detay: kayitlar
+    });
+  }
+  // sonuç ekranında ünite ünite başarı (zayıftan güçlüye)
+  function uniteTablosu(s) {
+    const satirlar = Object.entries(s).map(([uid, x]) => ({ u: ICERIK.bul(uid), ...x })).filter((x) => x.u)
+      .sort((a, c) => a.d / a.t - c.d / c.t || a.u.sira - c.u.sira);
+    return `<section class="kutu unite-sonuc"><h3>Ünite ünite</h3>${satirlar.map((x) => {
+      const o = Math.round((x.d / x.t) * 100);
+      return `<div class="us-satir"><span>${x.u.emoji} ${x.u.sira}. ${esc(x.u.baslik)}</span><span class="us-cubuk"><i class="${o >= 80 ? 'iyi' : o >= 60 ? 'orta' : 'kotu'}" style="width:${o}%"></i></span><b>${x.d}/${x.t}</b></div>`;
+    }).join('')}</section>`;
   }
 
   /* =========================================================
@@ -515,6 +596,7 @@
       g.className = 'geribildirim acik ' + (s.dogru ? (s.uyari ? 'uyari' : 'dogru') : 'yanlis');
       let ic = `<b>${s.dogru ? (s.uyari ? 'Neredeyse!' : 'Doğru! 🎉') : 'Yanlış'}</b>`;
       if (s.mesaj) ic += `<p>${esc(s.mesaj)}</p>`;
+      if (s.metin) ic += `<p class="detay-metin">🎧 ${esc(s.metin)}${s.metinTr ? `<br><i>${esc(s.metinTr)}</i>` : ''}</p>`;
       if (s.uyari) ic += `<p>${esc(s.uyari)} <b>${esc(s.dogrusu)}</b></p>`;
       else if (!s.dogru && s.dogrusu) ic += `<p>Doğrusu: <b>${esc(s.dogrusu)}</b></p>`;
       if (s.en && ingilizce()) ic += `<p class="en">🇬🇧 ${esc(s.en)}</p>`;
@@ -580,6 +662,15 @@
     if (gecti) { ilr.adimlar.sinav = true; ilr.tamamlandi = true; }
     Depo.kaydet();
     const idx = ICERIK.uniteler.findIndex((u) => u.id === uid), sonraki = idx < 0 ? null : ICERIK.uniteler[idx + 1];   // ek ünitede sonraki yok
+    // blok sonu (5, 10, 15, 20, 27): sırada büyük sınav var
+    const b = gecti && Alistirma.buyukSinavSonu(uid);
+    if (b && !buyukGecildi(b)) {
+      return sonucEkrani({
+        dogru: d, toplam: t, baslik: 'Sınavı geçtin! ⭐',
+        mesaj: `🏆 Büyük sınav ${b.no} açıldı: Ünite ${b.bas}–${b.son}.${b.son < 27 ? ` Geçince Ünite ${b.son + 1} açılır.` : ''}`,
+        geri: anaEkran, ileri: { ad: `🏆 Büyük sınav ${b.no}'e geç →`, fn: () => buyukSinavGiris(b) }, detay: kayitlar
+      });
+    }
     sonucEkrani({
       dogru: d, toplam: t,
       baslik: gecti ? 'Sınavı geçtin! ⭐' : 'Henüz olmadı',
@@ -613,17 +704,18 @@
   }
 
   /* ---------- Sonuç ekranı ---------- */
-  function sonucEkrani({ dogru, toplam, baslik, mesaj, geri, ileri, detay }) {
+  function sonucEkrani({ dogru, toplam, baslik, mesaj, geri, ileri, detay, ek, gecmeOrani }) {
     const oran = toplam ? Math.round((dogru / toplam) * 100) : null;
     kok.innerHTML = `
       <div class="sonuc">
-        ${oran !== null ? `<div class="skor ${oran >= GECME_ORANI * 100 ? 'iyi' : ''}"><b>%${oran}</b><span>${dogru}/${toplam} doğru</span></div>` : '<div class="skor iyi"><b>✓</b></div>'}
+        ${oran !== null ? `<div class="skor ${oran >= (gecmeOrani || GECME_ORANI) * 100 - 1e-9 ? 'iyi' : ''}"><b>%${oran}</b><span>${dogru}/${toplam} doğru</span></div>` : '<div class="skor iyi"><b>✓</b></div>'}
         <h2>${esc(baslik)}</h2>
         ${mesaj ? `<p>${esc(mesaj)}</p>` : ''}
         <div class="sonuc-butonlar">
           ${ileri ? `<button class="ana-buton ileri">${esc(ileri.ad)}</button>` : ''}
           <button class="${ileri ? 'ikinci-buton' : 'ana-buton'} geri">${ileri ? 'Geri dön' : 'Devam →'}</button>
         </div>
+        ${ek || ''}
         ${detay && detay.length ? sinavDetay(detay) : ''}
       </div>`;
     kok.querySelector('.geri').addEventListener('click', geri);
@@ -638,6 +730,7 @@
     const satir = (k) => `
       <div class="detay-satir ${k.dogru ? 'iyi' : 'kotu'}">
         <div class="detay-soru"><span>${k.no}.</span> ${esc(k.soru || '')}</div>
+        ${k.metin ? `<div class="detay-metin">🎧 ${esc(k.metin)}${k.metinTr ? `<br><i>${esc(k.metinTr)}</i>` : ''}</div>` : ''}
         ${k.dogru
           ? `<div>✓ <b>${esc(k.verilen || '')}</b>${k.uyari ? ` <small>(doğrusu: ${esc(k.dogrusu)})</small>` : ''}</div>`
           : `<div class="senin">✗ Senin cevabın: <s>${esc(k.verilen || '—')}</s></div><div class="dogrusu">✓ Doğrusu: <b>${esc(k.dogrusu || '')}</b></div>`}

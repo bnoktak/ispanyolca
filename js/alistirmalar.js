@@ -1059,6 +1059,129 @@
       return karistir(liste);
     },
 
+    /* ---------- 🏆 BÜYÜK SINAV: her 5 ünitede bir (21–27 tek grup) ----------
+       Ünite ilerlemesinin yanında 'b01'…'b05' kimliğiyle saklanır (Depo.veri.uniteler): veri biçimi değişmez,
+       senkron ünite kuralıyla birleştirir. Geçilmeden sonraki blok açılmaz (app.js → uniteAcikMi). */
+    BUYUK_SINAVLAR: [['b01', 1, 5], ['b02', 6, 10], ['b03', 11, 15], ['b04', 16, 20], ['b05', 21, 27]]
+      .map(([id, bas, son], i) => ({ id, no: i + 1, bas, son })),
+    BUYUK_GECME: 0.8,
+    // grubun son ünitesi bu ünite mi? (Ünite 5 → b01)
+    buyukSinavSonu(uid) { const u = ICERIK.bul(uid); return u && !u.ek ? this.BUYUK_SINAVLAR.find((b) => b.son === u.sira) || null : null; },
+
+    /* Büyük sınav: 24 soru = 18 🎧 uzun dinleme (sahneler: icerik/dinleme.js; her sahne "anla" + "cevap ver")
+       + 6 kısa üretim (kelime, çekim, cümle; zor kelimeler önce). B02+ sınavlarda dinlemenin bir kısmı önceki
+       blokların sahnelerinden. Bloğun sahnesi yetmezse eksik dinleme yerine klasik sorular gelir. */
+    BUYUK_DINLEME: 18, BUYUK_URETIM: 6,
+    buyukSinav(b) {
+      this._sifirla();
+      const tum = ICERIK.dinlemeler || [];
+      const oncekiBloklar = this.BUYUK_SINAVLAR.filter((x) => x.son < b.bas).map((x) => x.id);
+      const ses = Ses.aktif();
+      const gruplar = [];        // her grup: art arda gelecek soru üreticileri (aynı sahnenin iki sorusu yan yana)
+      let dinleme = 0;
+      const sahneEkle = (s) => {
+        const g = ['anla', 'cevap'].filter((t) => s[t]).map((t) => () => { const a = this.dinleSahne(s, t, !ses); a.unite = s.uid; return a; });
+        if (dinleme + g.length > this.BUYUK_DINLEME) return;
+        gruplar.push(g); dinleme += g.length;
+      };
+      // önce önceki blokların 2 sahnesi (en fazla 4 soru), sonra bu bloğun sahneleri
+      if (oncekiBloklar.length) karistir(tum.filter((s) => oncekiBloklar.includes(s.blok))).slice(0, 2).forEach(sahneEkle);
+      karistir(tum.filter((s) => s.blok === b.id)).forEach(sahneEkle);
+      // kısa üretim + (sahne yetmediyse) eksik dinlemenin yerine klasik sorular
+      const klasikAdet = this.BUYUK_URETIM + (this.BUYUK_DINLEME - dinleme);
+      this._buyukKlasik(b, klasikAdet, oncekiBloklar.length ? Math.round(klasikAdet * 0.3) : 0).forEach((f) => gruplar.push([f]));
+      return this._tekrarsiz(karistir(gruplar).flat());
+    },
+
+    // Klasik büyük sınav soruları (eski düzen): ~%70 blok (önce zor / tekrar kutusu düşük kelimeler), gerisi önceki üniteler
+    _buyukKlasik(b, TOPLAM, ONCEKI) {
+      const ses = Ses.aktif();
+      const blok = ICERIK.uniteler.filter((u) => u.sira >= b.bas && u.sira <= b.son);
+      const onceki = ICERIK.uniteler.filter((u) => u.sira < b.bas);
+      if (!onceki.length) ONCEKI = 0;
+      const BLOK = TOPLAM - ONCEKI;
+      const uretici = [];
+
+      // 1) kelime soruları (blok): zor bulunan ve tekrar kutusu düşük kelimeler önce
+      const zorluk = (k) => {
+        const r = Depo.veri.kelimeler[k.id];
+        return (window.Puan && Puan.zorMu(k.id) ? 4 : 0) + (r ? Math.max(0, 5 - (r.kutu || 1)) : 3) + Math.random() * 2;
+      };
+      const kelimeler = blok.flatMap((u) => u.kelimeler).filter((k) => k.yazma !== false).sort((a, c) => zorluk(c) - zorluk(a));
+      const KELIME = Math.round(BLOK * 0.45);
+      const turSirasi = ses ? ['yaz', 'sec_tr', 'dinle_yaz', 'yaz', 'dinle_sec'] : ['yaz', 'sec_tr', 'yaz'];
+      benzersiz(kelimeler).slice(0, KELIME).forEach((k, i) => {
+        const t = turSirasi[i % turSirasi.length];
+        uretici.push(() => {
+          const a = t === 'yaz' ? this.yazVeya(k, true) : t === 'sec_tr' ? this.sec(k, 'tr') : this.dinle(k, t === 'dinle_yaz' && yazmaKalsin() ? 'yaz' : 'sec');
+          a.unite = k.unite; return a;
+        });
+      });
+
+      // 2) cümle düzeyi (blok): üniteler sırayla, üretim ağırlıklı türler
+      const CUMLE_TURLERI = ['cumle', 'bosluk', 'ceviri', 'cekim', 'cekim_cumle', 'ser_estar', 'dinle_cumle', 'artikel', 'soru_cevap', 'rakam', 'bosluk', 'cumle'];
+      const kalan = BLOK - uretici.length;
+      for (let i = 0; i < kalan; i++) {
+        const u = blok[i % blok.length], var_ = this.uniteTurleri(u);
+        const adaylar = CUMLE_TURLERI.filter((t) => var_.includes(t));
+        const t = adaylar.length ? adaylar[(Math.floor(i / blok.length) + i) % adaylar.length] : null;
+        // soru–cevap sınavda hep "doğru cevabı seç" (eşleştirme tanıma türü, sınavda yok)
+        if (t === 'soru_cevap') uretici.push(() => { const a = this.soruCevap(rastgele(u.soruCevap), this._scHavuz(u), 'sec'); a.unite = u.id; return a; });
+        else uretici.push(() => this.uniteden(u, t || undefined));
+      }
+
+      // 3) önceki ünitelerden karışık (unutulmuş mu?)
+      const ESKI_TURLERI = ['yaz', 'cumle', 'bosluk', 'ceviri', 'cekim', 'sec_tr', 'dinle_yaz'];
+      for (let i = 0; i < ONCEKI; i++) {
+        const u = rastgele(onceki), var_ = this.uniteTurleri(u);
+        const adaylar = ESKI_TURLERI.filter((t) => var_.includes(t));
+        uretici.push(() => this.uniteden(u, adaylar.length ? rastgele(adaylar) : undefined));
+      }
+      return uretici;
+    },
+
+    /* 🎧 Uzun dinleme sorusu. s = sahne (icerik/dinleme.js), tip 'anla' (Türkçe soru + Türkçe şıklar)
+       ya da 'cevap' (duruma uygun İspanyolca cevabı seç). Şıkların ilki doğrudur; gösterirken karıştırılır.
+       yazili: cihazda İspanyolca ses yoksa sahne yazılı gösterilir (okuma sorusu olur). */
+    dinleSahne(s, tip, yazili) {
+      const q = s[tip];
+      // sonuç ekranı için metin: iki kişilik konuşmada satırlar "—" ile ayrılır
+      const metin = s.satirlar.length > 1 ? s.satirlar.map(([, m]) => '— ' + m).join(' ') : s.satirlar[0][1];
+      return {
+        tur: tip === 'anla' ? 'dinle_anla' : 'dinle_cevap', anahtar: s.id + ':' + tip,
+        render(alan, bitti) {
+          const siklar = karistir(q.siklar.map((m, i) => ({ m, dogru: i === 0 })));
+          const dogruI = siklar.findIndex((x) => x.dogru);
+          const satirHtml = s.satirlar.map(([kim, m]) => `<p><span class="konusan ${kim === 'B' ? 'b' : 'a'}">${kim === 'B' ? '🅱' : '🅰'}</span> ${esc(m)}</p>`).join('');
+          alan.innerHTML = `
+            <p class="yonerge">${tip === 'anla' ? '🎧 Dinle ve anla' : '💬 Dinle ve cevap ver'}</p>
+            <p class="sahne-adi">📍 ${esc(s.sahne)}</p>
+            ${yazili ? `<div class="diyalog sahne-metin">${satirHtml}</div>`
+              : `<div class="dinle-alan"><button type="button" class="dinle-buton" title="Tekrar dinle (boşluk)">🔊</button><button type="button" class="yavas-buton">🐢 yavaş</button></div>`}
+            <div class="soru sahne-soru">${esc(q.soru)}</div>
+            <div class="siklar">${siklar.map((x, i) => `<button class="sik ${tip === 'cevap' ? 'es-sik' : ''}" data-i="${i}"><span class="no">${i + 1}</span>${esc(x.m)}</button>`).join('')}</div>`;
+          const cal = (yavas) => Ses.sahneOku(s.satirlar, yavas);
+          let zaman = null;
+          if (!yazili) {
+            const buton = alan.querySelector('.dinle-buton');
+            buton.addEventListener('click', () => cal(false));
+            alan.querySelector('.yavas-buton').addEventListener('click', () => cal(true));
+            // açılınca bir kez okunur; soru o arada değiştiyse (buton artık sayfada değilse) okunmaz
+            zaman = setTimeout(() => { if (alan.contains(buton)) cal(false); }, 350);
+          }
+          let bitmis = false;
+          const sec = (i) => {
+            if (bitmis) return; bitmis = true;
+            alan.querySelectorAll('.sik').forEach((b, j) => { b.disabled = true; if (j === dogruI) b.classList.add('dogru'); else if (j === i) b.classList.add('yanlis'); });
+            bitti({ dogru: i === dogruI, dogrusu: siklar[dogruI].m, soru: `${s.sahne}: ${q.soru}`, verilen: siklar[i].m, metin, metinTr: s.tr });
+          };
+          alan.querySelectorAll('.sik').forEach((b) => b.addEventListener('click', () => sec(+b.dataset.i)));
+          alan._tus = (e) => { const n = +e.key; if (n >= 1 && n <= siklar.length) sec(n - 1); else if (e.key === ' ' && !yazili) { e.preventDefault(); cal(false); } };
+          alan._temizle = () => { clearTimeout(zaman); Ses.dur(); };
+        }
+      };
+    },
+
     // Genel tekrar: önce vakti gelen kelimeler, kalanı açılmış ünitelerden rastgele her türden alıştırma
     genelTekrar(uniteler, vakitGelenIdler, adet) {
       this._sifirla(vakitGelenIdler.slice(0, Math.ceil(adet / 2)));

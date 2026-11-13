@@ -64,6 +64,27 @@
     },
     dur() { if ('speechSynthesis' in window) speechSynthesis.cancel(); },
 
+    // 🎧 Sahne (uzun dinleme): satirlar = [['A', 'metin'], ['B', 'metin']…]. A seçili sesle, B ikinci bir
+    // İspanyolca sesle okunur; ikinci ses yoksa aynı ses daha ince tonla. Satırlar sırayla kuyruğa girer.
+    ikinciSes(birinci) {
+      const adaylar = this.sesler.filter((v) => v !== birinci);
+      return adaylar.find((v) => LATAM.test(v.lang)) || adaylar[0] || null;
+    },
+    sahneOku(satirlar, yavas) {
+      if (!this.aktif() || !satirlar || !satirlar.length) return;
+      const v1 = this.secili(), v2 = this.ikinciSes(v1);
+      const hiz = this.ayar().sesHiz || 0.9;
+      speechSynthesis.cancel();
+      satirlar.forEach(([kim, metin]) => {
+        const u = new SpeechSynthesisUtterance(this.temizle(metin));
+        const v = kim === 'B' ? v2 || v1 : v1;
+        if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'es-MX';
+        if (kim === 'B' && !v2) u.pitch = 1.35;
+        u.rate = yavas ? Math.max(0.5, hiz - 0.3) : hiz;
+        speechSynthesis.speak(u);
+      });
+    },
+
     // Harf kartları (h, ll, ñ…) sesli okumaya uygun değil
     okunurMu(kelime) { return kelime && kelime.yazma !== false; }
   };

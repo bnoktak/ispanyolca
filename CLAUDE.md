@@ -14,6 +14,7 @@ Ayrıntılı kararlar `PLAN.md` içinde, telefona taşıma planı `TELEFON_PLANI
 - Derleme adımı yok: düz HTML/CSS/JS, **klasik `<script>` etiketleri** (modül değil). Bilgisayarda `index.html` çift tıklanıp `file://` ile de çalışmalı; bu özellik bozulmamalı.
 - Global nesneler: `ICERIK` (içerik), `Depo` (kayıt), `Tekrar` (aralıklı tekrar), `Ses` (sesli okuma), `Alistirma` (soru türleri), `Puan` (1-2-3 zorluk günlüğü), `Cihaz` (yalnızca bu cihazın ayarları: telefon modu vb.; ilerlemeye/senkrona girmez).
 - 📱 Telefon modu (`Cihaz.telefon()`, `<body class="telefon">`): yazma soruları `Alistirma.yazVeya` / `ceviriVeya` / `yazModu` ile çoğunlukla şıklara, 🔤 harflerden kur (`harf_kur`) ve 🧱 kelimelerden kur (`ceviri_kur`) türlerine döner; ~%20'si yazma kalır. Yeni bir yazma sorusu eklenirse bu dönüşüme de bağlanmalı.
+- 🏆 Büyük sınav (`Alistirma.BUYUK_SINAVLAR`: b01 Ünite 1–5, b02 6–10, b03 11–15, b04 16–20, b05 21–27): 24 soru = 18 🎧 uzun dinleme (`icerik/dinleme.js` sahneleri; her sahne `anla` + `cevap` sorusu, `dinle_anla` / `dinle_cevap` türleri, iki sesle okunur, sınavda yazı gizli) + 6 kısa üretim (zor kelimeler önce). B02+ sınavlarda ≤2 sahne önceki bloklardan; bloğun sahnesi yetmezse eksik yer klasik sorularla dolar. Eşleştirme yok, geçme %80. Sonuç `Depo.veri.uniteler.b01…` kaydında (ünite gibi birleşir, veri biçimi aynı). Geçilmeden bloğun sonraki ünitesi açılmaz; zaten başlanmış ünite kilitlenmez (`uniteAcikMi`).
 - Yeni bir dosya eklenirse `index.html` içindeki script sırasına **ve `sw.js` içindeki `DOSYALAR` listesine** eklenmeli (`node denetim.js` eksikleri bildirir).
 
 ```
@@ -39,6 +40,7 @@ icerik/uXX-*.js       27 ana ünite (sırayla açılır)
 icerik/xXX-*.js       ek üniteler (ek: true, kilitsiz, sira 100+)
 icerik/ozet.js        özet tablolar verisi (kişi tablosu, küçük tablolar, örnek cümleler)
 icerik/sablonlar.js   cümle şablonları (Quiero un/una X …)
+icerik/dinleme.js     🎧 uzun dinleme sahneleri (büyük sınav): { id, blok, uid, sahne, satirlar [[A|B, es]], tr, anla, cevap }; şıkların ilki doğru; denetim uid'ye göre kontrol eder
 icerik/kelime-cumleleri.js  kelime örnek cümleleri { kelimeId: [es, tr] } (mini kart + widget); claude.ai'da yazılır
 denetim.js            içerik denetimi: öğretilmemiş kelime var mı? (kelime cümleleri dahil: kimlik, kilit, uzunluk, kelime geçiyor mu)
 cumle-hazirlik.js     `node cumle-hazirlik.js` → hazirlik/cumle-grup-1..6.md (claude.ai'a yapıştırılacak kurallar + kelimeler + izinli kelimeler; git dışında)

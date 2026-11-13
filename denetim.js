@@ -5,6 +5,9 @@ for (const f of fs.readdirSync('icerik').filter(f => /^(u|x)\d/.test(f)).sort())
 // kelime örnek cümleleri (claude.ai'da yazılır, cumle-hazirlik.js ile hazırlanır): ICERIK.kelimeCumleleri = { kelimeId: [es, tr] }
 if (fs.existsSync('icerik/kelime-cumleleri.js')) eval(fs.readFileSync('icerik/kelime-cumleleri.js', 'utf8'));
 const KC = ICERIK.kelimeCumleleri || {};
+// 🎧 uzun dinleme sahneleri (büyük sınav): ICERIK.dinlemeler = [{ id, blok, uid, sahne, satirlar, tr, anla, cevap }]
+if (fs.existsSync('icerik/dinleme.js')) eval(fs.readFileSync('icerik/dinleme.js', 'utf8'));
+const DL = ICERIK.dinlemeler || [];
 const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[¿?¡!.,;:…"—\[\]]/g, ' ');
 // notlarda açıkça öğretilen küçük kelimeler + özel isimler
 const NOT_EK = { u02: ['ana', 'turquia', 'colombia', 'batuhan'], u04: ['un', 'una', 'mis', 'tus', 'sus', 'ankara'], u05: ['del'], u09: ['veintiun'], u11: ['al'], u12: ['yılmaz', 'mehmet'], u13: ['juarez', 'reforma', 'tercer'], u16: ['ciento', 'doscientos'], u17: ['penicilina'], u21: ['kalem', 'kapı', 'lapices'], u24: ['cartagena', 'peru'] };
@@ -56,6 +59,32 @@ function cumleDenetle(u) {
   });
 }
 Object.keys(KC).filter(id => !ICERIK.kelime(id)).forEach(id => { sorun++; console.log('CÜMLE: böyle bir kelime yok', id); });
+// sahneler: biçim (bir kez) + İspanyolca metin ve cevap şıkları sahnenin uid'sine göre (ünite döngüsünde)
+const BLOKLAR = { b01: [1, 5], b02: [6, 10], b03: [11, 15], b04: [16, 20], b05: [21, 27] };
+const dlGorulen = new Set();
+DL.forEach(s => {
+  const yaz = (m) => { sorun++; console.log('SAHNE', s.id || '?', '|', m); };
+  if (!s.id || dlGorulen.has(s.id)) yaz('kimlik yok ya da tekrar'); dlGorulen.add(s.id);
+  const u = ICERIK.uniteler.find(x => x.id === s.uid);
+  if (!u) yaz('uid ana ünite değil: ' + s.uid);
+  if (!BLOKLAR[s.blok]) yaz('blok geçersiz: ' + s.blok);
+  else if (u && u.sira > BLOKLAR[s.blok][1]) yaz(`uid (${s.uid}) bloğun (${s.blok}) son ünitesinden sonra`);
+  if (!s.sahne || !s.tr || !Array.isArray(s.satirlar) || !s.satirlar.length || s.satirlar.some(x => !['A', 'B'].includes(x[0]) || !x[1])) yaz('sahne / tr / satirlar biçimi');
+  if (!s.anla && !s.cevap) yaz('anla ya da cevap sorusu yok');
+  ['anla', 'cevap'].filter(t => s[t]).forEach(t => {
+    const q = s[t];
+    if (!q.soru || !Array.isArray(q.siklar) || q.siklar.length < 3 || q.siklar.length > 4) yaz(`${t}: soru / 3–4 şık`);
+    else if (new Set(q.siklar.map(x => String(x).trim().toLowerCase())).size !== q.siklar.length) yaz(`${t}: aynı şık iki kez`);
+  });
+});
+function sahneDenetle(u) {
+  DL.filter(s => s.uid === u.id).forEach(s => {
+    [...s.satirlar.map(x => x[1]), ...((s.cevap && s.cevap.siklar) || [])].forEach(m => {
+      const bil = norm(m).split(/\s+/).filter(Boolean).filter(w => !bilinir(w));
+      if (bil.length) { sorun++; console.log('SAHNE', s.id, '|', m, '→ öğretilmemiş:', bil.join(', ')); }
+    });
+  });
+}
 for (const u of ICERIK.uniteler) {
   u.kelimeler.forEach(k => norm(k.es).split(/[\s/]+/).filter(Boolean).forEach(w => izinli.add(w)));
   (NOT_EK[u.id] || []).forEach(w => izinli.add(w));
@@ -68,9 +97,11 @@ for (const u of ICERIK.uniteler) {
     if (bil.length) { sorun++; console.log(u.id, '|', m, '→', bil.join(', ')); }
   }
   cumleDenetle(u);
+  sahneDenetle(u);
 }
 // ek üniteler (kilitsiz): tüm ana ünitelerin kelimeleri + kendi kelimeleri
 for (const u of ICERIK.ekler) { u.kelimeler.forEach(k => norm(k.es).split(/[\s/]+/).filter(Boolean).forEach(w => izinli.add(w))); cumleDenetle(u); }
+if (DL.length) console.log(`Dinleme sahneleri: ${DL.length} (${Object.keys(BLOKLAR).map(b => `${b}: ${DL.filter(s => s.blok === b).length}`).join(', ')})`);
 if (Object.keys(KC).length) console.log(`Kelime cümleleri: ${Object.keys(KC).length} / ${[...ICERIK.uniteler, ...ICERIK.ekler].flatMap(u => u.kelimeler).filter(k => k.yazma !== false).length} kelimenin cümlesi var${uyari ? `, ${uyari} uyarı` : ''}`);
 // Yayın listesi: index.html'deki her dosya sw.js'de (çevrimdışı önbellek) var mı, listedeki dosyalar gerçekten var mı?
 const html = fs.readFileSync('index.html', 'utf8'), sw = fs.readFileSync('sw.js', 'utf8');

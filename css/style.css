@@ -451,6 +451,30 @@ body.telefon .puanla button { flex: 1; min-height: 46px; font-size: 16px; font-w
 .kisi-kart h5 { margin: 14px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--soluk); }
 .kisi-kart .ozet-tablo td:first-child { width: 50%; }
 
+/* 🏆 büyük sınav */
+.unite.buyuk { border: 2px solid #5c4a1c; background: linear-gradient(135deg, #2a2516, var(--kart)); }
+.unite.buyuk .unite-emoji { background: #3d3214; }
+.unite.buyuk small { color: var(--sari); }
+.unite.buyuk.bitti { border-color: var(--sari); }
+.unite.buyuk.kilitli { background: var(--kart); border-color: var(--cizgi); }
+.unite-sonuc { text-align: left; margin: 20px 0 0; }
+.us-satir { display: grid; grid-template-columns: 1fr 90px 44px; gap: 10px; align-items: center; padding: 6px 0; font-size: 15px; border-bottom: 1px solid var(--cizgi); }
+.us-satir:last-child { border-bottom: none; }
+.us-satir > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.us-satir b { text-align: right; }
+.us-cubuk { height: 8px; background: var(--cizgi); border-radius: 99px; overflow: hidden; }
+.us-cubuk i { display: block; height: 100%; border-radius: 99px; }
+.us-cubuk i.iyi { background: var(--yesil); } .us-cubuk i.orta { background: var(--sari); } .us-cubuk i.kotu { background: var(--kirmizi); }
+
+/* 🎧 uzun dinleme (büyük sınav) */
+.sahne-adi { text-align: center; color: var(--soluk); font-size: 14px; font-weight: 600; margin: -4px 0 6px; }
+.soru.sahne-soru { font-size: 19px; padding: 16px 18px; }
+.sik.es-sik { font-weight: 600; color: #ffd9cc; }
+.sahne-metin p { line-height: 1.5; }
+.konusan { display: inline-block; width: 22px; font-size: 15px; }
+.detay-metin { font-size: 14px; color: var(--soluk); background: var(--zemin); border-radius: 8px; padding: 6px 10px; margin: 4px 0 6px; line-height: 1.45; }
+.geribildirim .detay-metin { background: rgba(0, 0, 0, .2); color: inherit; }
+
 /* 🃏 mini kart */
 .tekrar-buton.mini-buton { margin-top: 10px; background: var(--kart); color: var(--yazi); border: 2px solid var(--cizgi); box-shadow: var(--golge); }
 .tekrar-buton.mini-buton small { color: var(--soluk); opacity: 1; }

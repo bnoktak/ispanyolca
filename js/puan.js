@@ -21,7 +21,8 @@
     artikel: 'Artikel seçme (el / la)', cogul: 'Çoğul yapma', sc_sec: 'Soruya doğru cevap', sc_eslestir: 'Soru–cevap eşleştirme', rakam: 'Dinle → rakamla yaz',
     sc_dinle: 'Soruyu dinle → cevabı seç', cekim_cumle_yaz: 'Cümlede fiil çekimi (yazma)', cekim_cumle_sec: 'Cümlede fiil çekimi (seçme)',
     ser_estar: 'ser mi estar mı?', ceviri: 'Türkçe cümle → İspanyolca yaz', dogru_yanlis: 'Cümle doğru mu yanlış mı?',
-    harf_kur: 'Türkçe → harflerden İspanyolca kur', ceviri_kur: 'Türkçe cümle → kelimelerden kur'
+    harf_kur: 'Türkçe → harflerden İspanyolca kur', ceviri_kur: 'Türkçe cümle → kelimelerden kur',
+    dinle_anla: 'Uzun dinleme → anla', dinle_cevap: 'Uzun dinleme → cevap ver'
   };
 
   const Puan = {
