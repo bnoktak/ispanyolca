@@ -1,23 +1,69 @@
-¡HOLA! İSPANYOLCA — NASIL KULLANILIR
-====================================
+¡HOLA! İSPANYOLCA — NASIL KULLANILIR, NEREDEN ULAŞILIR
+=====================================================
 
-1) index.html dosyasına çift tıkla (Vivaldi, Chrome ya da Edge ile açılmalı).
+UYGULAMA NEREDE?
+----------------
+Uygulamanın tamamı üç yerde durur. Biri kaybolsa diğerleri yeter.
 
-2) İlerlemen tarayıcıda tutulur, açılışta hiçbir izin sorulmaz.
+1) İnternette (her cihazdan, hiçbir şey kurmadan):
+   https://bnoktak.github.io/ispanyolca/
+   iPhone'da Safari ile aç → Paylaş → "Ana Ekrana Ekle". İnternetsiz de çalışır.
 
-3) Harddiske kaydetmek için: ⚙️ Ayarlar → "💾 Harddiske kaydet".
-   İlk seferde açılan pencerede BU klasörü (ispanyolca) seç ve izin ver.
-   Klasöre ilerleme.json yazılır, ayrıca yedekler\ içine tarihli bir kopya konur.
+2) GitHub'da (kodun tamamı, her sürümüyle):
+   https://github.com/bnoktak/ispanyolca
+   Bilgisayara indirmek için: yeşil "Code" düğmesi → "Download ZIP" → zip'i aç.
 
-FORMAT ATMADAN ÖNCE
--------------------
-⚙️ Ayarlar → "💾 Harddiske kaydet" de. Bu kadar.
-Format sonrası: uygulamayı aç → ⚙️ Ayarlar → "📂 Harddisten geri yükle"
-→ ispanyolca klasörünü seç. Kaldığın yerden devam edersin.
+3) Bu klasörde: index.html dosyasına çift tıkla (Vivaldi, Chrome ya da Edge).
+   Klasörü zipleyip başka bilgisayara taşısan da aynen çalışır. Kurulum gerekmez.
+
+Uygulama Claude'a bağlı DEĞİL. Claude olmasa da her şey çalışır;
+Claude yalnızca yeni içerik ya da özellik eklemek için gerekir.
+
+
+İLERLEMEM NEREDE?
+-----------------
+İlerlemen (öğrendiğin kelimeler, geçtiğin üniteler) üç yerde tutulabilir:
+
+  a) Tarayıcının içinde: otomatik. Tarayıcı verisi silinirse gider.
+  b) ☁️ Bulutta (senkron): GitHub hesabındaki gizli bir Gist'te. Bilgisayar ve
+     telefon birbirini buradan günceller. Asıl güvencen bu.
+  c) 💾 Dosyada: ⚙️ Ayarlar → "Harddiske kaydet" → ilerleme.json + yedekler\ klasörü.
+     (Bu dosyalar kişiseldir, GitHub'a hiç gönderilmez.)
+
+
+FORMAT ATTIĞIMDA / YENİ BİLGİSAYARDA
+-----------------------------------
+1) Uygulamayı aç: siteden ya da GitHub'dan zip olarak indirip.
+2) ⚙️ Ayarlar → ☁️ Senkron → GitHub anahtarını gir.
+   Uygulama eski Gist'ini kendisi bulur, ilerlemen geri gelir.
+   Anahtar elinde yoksa yenisini al (aşağıda "ANAHTAR" bölümü); yeni anahtar da aynı Gist'i bulur.
+3) Bulut kullanmıyorsan: ⚙️ Ayarlar → "📂 Harddisten geri yükle" → yedek klasörünü seç.
+
+YENİ TELEFON
+------------
+1) Safari'de siteyi aç → Paylaş → "Ana Ekrana Ekle".
+2) Uygulamada ⚙️ Ayarlar → ☁️ Senkron → aynı GitHub anahtarını gir. İlerleme gelir.
+3) Widget istersen: Scriptable uygulamasını kur → ⚙️ Ayarlar → 📲 iPhone widget'ı bölümündeki adımlar.
+
+ANAHTAR (GitHub token)
+----------------------
+- github.com → sağ üstte profil → Settings → Developer settings → Personal access tokens
+  → Fine-grained tokens → Generate new token. İzin olarak yalnızca "Gists: Read and write".
+- Anahtarı şifre yöneticinde (ya da güvendiğin bir notta) sakla. Kimseyle paylaşma.
+- Süresi dolunca uygulama "Anahtar geçersiz ya da süresi dolmuş" der.
+  Yeni anahtar al, iki cihazda da Ayarlar → Senkron'dan gir. İlerleme kaybolmaz.
+
+EK GÜVENCE (arada bir, ör. ayda bir)
+------------------------------------
+- ⚙️ Ayarlar → "💾 Harddiske kaydet" de ve ilerleme.json'u OneDrive / Google Drive'a da koy.
+- İstersen bu klasörü zipleyip oraya koy. Böylece GitHub hesabına bir şey olsa bile
+  uygulama da ilerlemen de elinde kalır.
+
 
 KLAVYE KISAYOLLARI
 ------------------
-Kartlar:     Boşluk = çevir · Enter/→ = sonraki kart · S = dinle
+Kartlar:     Boşluk = çevir · Enter / → = sonraki · ← = önceki · S = dinle
+             (telefonda kartı sağa / sola kaydır)
 Alıştırma:   1-4 = şık seç · Enter = kontrol et / devam · Boşluk = tekrar dinle (dinleme sorularında)
 Cevaptan sonra: 1 / 2 / 3 = bu soru kolay / orta / zor (isteğe bağlı)
 
@@ -25,11 +71,26 @@ SESLİ OKUMA
 -----------
 Windows'un İspanyolca sesini kullanır. Ses yoksa: Windows Ayarlar → Saat ve dil →
 Konuşma → Sesleri yönet → Ses ekle → Español (México). Sonra tarayıcıyı kapatıp aç.
-Ayarlar (⚙️) → Sesli okuma bölümünden ses, hız ve otomatik okuma seçilir.
+⚙️ Ayarlar → Sesli okuma bölümünden ses, hız ve otomatik okuma seçilir.
+iPhone'da sesler kendiliğinden gelir.
 
-ZORLUK PUANI VE RAPOR (v2.0)
-----------------------------
+ZORLUK PUANI VE RAPOR
+---------------------
 Alıştırma ve tekrarda her cevaptan sonra "1 kolay · 2 orta · 3 zor" düğmeleri çıkar.
-Zor dediğin kelimeler tekrarda daha sık gelir. ⚙️ Ayarlar → 📊 Zorluk raporu:
-en zor sorular, soru türleri, üniteler. İçeriği bu verilere göre güncellemek için
-Harddiske kaydet ve ilerleme.json dosyasını Claude'a gönder.
+Zor dediğin kelimeler tekrarda daha sık gelir. ⚙️ Ayarlar → 📊 Zorluk raporu.
+
+
+GELİŞTİRME İÇİN (Claude ya da sen kod değiştirirsen)
+-----------------------------------------------------
+Gerekenler: Node.js (nodejs.org) ve git. Format sonrası depoyu indirince bir kez:
+    git clone https://github.com/bnoktak/ispanyolca.git
+    cd ispanyolca
+    git config core.hooksPath .githooks      (her commit'te telefona "yeni sürüm" şeridi için)
+
+Kontroller:
+    node denetim.js          içerik denetimi → "Temiz" olmalı
+    node testler/hepsi.js    bütün testler (Edge / Chrome / Vivaldi'yi görünmez açar, ~5 dk)
+                             sonda ✅ / ❌ özeti; ekran görüntüleri testler\ciktilar\ içinde
+    node testler/hepsi.js ozet renk    yalnızca bazı testler
+
+Ayrıntılı kurallar: CLAUDE.md · Kararlar: PLAN.md

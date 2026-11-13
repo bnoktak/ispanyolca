@@ -45,6 +45,7 @@ icerik/ozet.js        özet tablolar verisi (kişi tablosu, küçük tablolar, �
 icerik/sablonlar.js   cümle şablonları (Quiero un/una X …)
 icerik/dinleme.js     🎧 uzun dinleme sahneleri (büyük sınav): { id, blok, uid, sahne, satirlar [[A|B, es]], tr, anla, cevap }; şıkların ilki doğru; denetim uid'ye göre kontrol eder
 icerik/kelime-cumleleri.js  kelime örnek cümleleri { kelimeId: [es, tr] } (mini kart + widget); claude.ai'da yazılır
+testler/              tarayıcı testleri (hepsi.js çalıştırıcı, ortak.js ayar); uygulamanın parçası değil
 denetim.js            içerik denetimi: öğretilmemiş kelime var mı? (kelime cümleleri dahil: kimlik, kilit, uzunluk, kelime geçiyor mu)
 cumle-hazirlik.js     `node cumle-hazirlik.js` → hazirlik/cumle-grup-1..6.md (claude.ai'a yapıştırılacak kurallar + kelimeler + izinli kelimeler; git dışında)
 ```
@@ -61,6 +62,7 @@ cumle-hazirlik.js     `node cumle-hazirlik.js` → hazirlik/cumle-grup-1..6.md (
 ## Test
 - `node --check <dosya>` ile söz dizimi kontrolü.
 - `node denetim.js` → "Temiz: öğretilmemiş kelime yok".
+- **`node testler/hepsi.js`** → bütün tarayıcı testleri (Edge/Chrome/Vivaldi'yi görünmez açar, ~5 dk; sonda ✅/❌ özeti, ekran görüntüleri `testler/ciktilar/`, git dışında). Tek tek: `node testler/hepsi.js ozet renk` ya da `node testler/<ad>.js`. Ortak ayar `testler/ortak.js`. Bir özellik değişince ilgili testi de güncelle; yeni özelliğe test ekle. Testler uygulamaya (index.html, sw.js) bağlı değil.
 - Tarayıcıda dene. Uygulamanın her ünitede her soru türünü hatasız üretmesi gerekir: konsolda `Alistirma.uniteden(u)` ile çok sayıda soru üretip `render` edilebilir.
 - Arayüz değişikliklerinden sonra hem geniş ekranda hem telefon genişliğinde (390 px) kontrol et.
 
