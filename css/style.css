@@ -451,6 +451,29 @@ body.telefon .puanla button { flex: 1; min-height: 46px; font-size: 16px; font-w
 .kisi-kart h5 { margin: 14px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--soluk); }
 .kisi-kart .ozet-tablo td:first-child { width: 50%; }
 
+/* 🎨 kişi renkleri: zamir, sahiplik ve fiil eki aynı renkte */
+.k-yo { color: #5cc8ff; } .k-tu { color: #57d68d; } .k-el { color: #ffb74d; } .k-nos { color: #c39bff; } .k-ellos { color: #ff8a8a; }
+/* fiil biçimi: kök sade · ek kişinin renginde · değişen harfler vurgulu · düzensiz ⚡ */
+.bc { color: var(--yazi); font-weight: 600; }
+.bc-ek { font-weight: 800; }
+.bc-ek::before { content: '·'; color: var(--soluk); font-weight: 400; margin: 0 1px; }
+.bc-degisen { background: rgba(255, 213, 79, .2); color: #ffd54f; font-weight: 800; border-radius: 4px; padding: 0 1px; }
+.bc-duzensiz { font-weight: 800; border-bottom: 2px dotted currentColor; }
+.bc-duzensiz::after { content: '⚡'; font-size: .7em; margin-left: 2px; }
+.bc-zamir { font-weight: 700; }
+.ortak { color: var(--yazi); font-weight: 600; }   /* kişiye göre değişmeyen kısım: "me [gusta]" */
+.kisi-tablo .sabit.s2 span, .kisi-kart .zamir span { font-weight: 800; }
+.renk-aciklama { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; font-size: 14px; color: var(--soluk); margin: 6px 0 10px; }
+.renk-aciklama .kisi-renkler b { margin-right: 6px; }
+.bicim-satir { font-size: 17px; }
+.geribildirim .bicim-satir .bc { color: inherit; }
+.kisi-dugmeler button.secili.k-dugme-yo { border-color: #5cc8ff; color: #5cc8ff; } .kisi-dugmeler button.secili.k-dugme-tu { border-color: #57d68d; color: #57d68d; }
+.kisi-dugmeler button.secili.k-dugme-el { border-color: #ffb74d; color: #ffb74d; } .kisi-dugmeler button.secili.k-dugme-nos { border-color: #c39bff; color: #c39bff; }
+.kisi-dugmeler button.secili.k-dugme-ellos { border-color: #ff8a8a; color: #ff8a8a; }
+/* artikel renkleri: el / los mavi, la / las pembe-kırmızı */
+.art-e { color: #6db3ff; font-weight: 700; } .art-d { color: #ff7aa2; font-weight: 700; }
+.yuz.on .es .art-e, .yuz.on .es .art-d { font-weight: 800; }
+
 /* 🏆 büyük sınav */
 .unite.buyuk { border: 2px solid #5c4a1c; background: linear-gradient(135deg, #2a2516, var(--kart)); }
 .unite.buyuk .unite-emoji { background: #3d3214; }

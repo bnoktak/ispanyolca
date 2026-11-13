@@ -186,7 +186,7 @@
             <div class="soru es cumle-bos">${goster}</div>
             <p class="ceviri">${esc(x.cm.tr)}</p>
             <p class="fiil-ipucu"><span class="es">${esc(x.c.fiil)}</span> <small>· ${esc(x.c.tr)}</small> → <b>${esc(KISI[x.kisi])}</b></p>`;
-          const sonuc = (verilen, s) => bitti({ dogru: s.dogru, uyari: s.uyari, dogrusu: x.cm.es, oku: x.cm.es, soru: `${bosMetin(p, x.i)} (${x.c.fiil} · ${KISI_KISA[x.kisi]})`, verilen, ipucu: `${KISI_KISA[x.kisi]} → ${x.c[x.kisi]}` });
+          const sonuc = (verilen, s) => bitti({ dogru: s.dogru, uyari: s.uyari, dogrusu: x.cm.es, oku: x.cm.es, soru: `${bosMetin(p, x.i)} (${x.c.fiil} · ${KISI_KISA[x.kisi]})`, verilen, ipucu: `${KISI_KISA[x.kisi]} → ${x.c[x.kisi]}`, bicim: { fiil: x.c.fiil, bicim: x.c[x.kisi], kisi: x.kisi } });
           if (mod === 'sec') {
             const siklar = karistir([dogru.toLowerCase(), ...karistir([...new Set(Object.keys(KISI).map((k) => x.c[k]).filter((f) => f && f !== x.c[x.kisi]))]).slice(0, 3)]);
             alan.innerHTML = ust + `<div class="siklar">${siklar.map((f, i) => `<button class="sik" data-i="${i}"><span class="no">${i + 1}</span>${esc(f)}</button>`).join('')}</div>`;

@@ -180,6 +180,56 @@
   // çeviri sorusuna uygun cümle: diyalog değil, en fazla 7 kelime
   const KISA_CUMLE = (c) => !c.es.includes('—') && c.es.split(' ').length <= 7;
 
+  /* ---------- 🎨 Fiil biçimini renkli gösterme ----------
+     Çekimli biçim mastarla karşılaştırılır:
+       düzenli      : kök · ek            habl·o
+       kök değişimi : değişen harfler     qu[ie]r·o, ten[g]·o, cono[z]c·o
+       düzensiz     : bütün kelime ⚡      soy, voy, sé
+     Ek, kişinin rengini alır (css: .k-yo, .k-tu, .k-el, .k-nos, .k-ellos). Dönüşlü zamir (me / te / se / nos) de. */
+  const BICIM_EK = { ar: ['o', 'as', 'a', 'amos', 'an'], er: ['o', 'es', 'e', 'emos', 'en'], ir: ['o', 'es', 'e', 'imos', 'en'] };
+  const KISI_SIRA = ['yo', 'tu', 'el', 'nos', 'ellos'];
+  const sesliHarf = (h) => /[aeiouáéíóú]/i.test(h);
+  const aksansiz = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  function bicimParcala(fiil, bicim, kisi) {
+    let zamir = '', kelime = String(bicim).trim();
+    const z = /^(me|te|se|nos)\s+(.+)$/i.exec(kelime);
+    if (z && /se$/i.test(fiil)) { zamir = z[1]; kelime = z[2]; }
+    const mastar = aksansiz(String(fiil).toLowerCase()).replace(/se$/, '');
+    const tur = mastar.slice(-2), kok0 = mastar.slice(0, -2), sira = KISI_SIRA.indexOf(kisi);
+    if (!BICIM_EK[tur] || sira < 0 || /\s/.test(kelime)) return { zamir, duz: kelime };
+    const ek = BICIM_EK[tur][sira], n = aksansiz(kelime.toLowerCase());
+    if (!n.endsWith(ek) || n.length <= ek.length) return { zamir, duzensiz: kelime };
+    const kok = kelime.slice(0, kelime.length - ek.length), kokN = n.slice(0, n.length - ek.length);
+    const ekMetin = kelime.slice(kelime.length - ek.length);
+    if (kokN === kok0) return { zamir, kok, ek: ekMetin };
+    let p = 0; while (p < kokN.length && p < kok0.length && kokN[p] === kok0[p]) p++;
+    if (p === 0) return { zamir, duzensiz: kelime };                     // eres, es…: kökü tanınmıyor
+    let s = 0; while (s < kokN.length - p && s < kok0.length - p && kokN[kokN.length - 1 - s] === kok0[kok0.length - 1 - s]) s++;
+    let a = p, b = kokN.length - s;
+    if (a >= b) return { zamir, kok, ek: ekMetin };
+    // yalnızca ünlü değiştiyse bitişik ünlüleri de kat: j[ue]go, c[ie]rro
+    if (sesliHarf(kok.slice(a, b)) && [...kok.slice(a, b)].every(sesliHarf)) {
+      // "qu" / "gu" içindeki u ünlü sayılmaz: qu[ie]ro (q[uie]ro değil)
+      while (a > 0 && sesliHarf(kok[a - 1]) && !(/u/i.test(kok[a - 1]) && a > 1 && /[qg]/i.test(kok[a - 2]))) a--;
+      while (b < kok.length && sesliHarf(kok[b])) b++;
+    }
+    return { zamir, kokOn: kok.slice(0, a), degisen: kok.slice(a, b), kokSon: kok.slice(b), ek: ekMetin };
+  }
+  function bicimHtml(fiil, bicim, kisi) {
+    const x = bicimParcala(fiil, bicim, kisi), k = 'k-' + kisi;
+    const z = x.zamir ? `<span class="bc-zamir ${k}">${esc(x.zamir)}</span> ` : '';
+    if (x.duz !== undefined) return z + esc(x.duz);
+    if (x.duzensiz) return z + `<span class="bc-duzensiz ${k}" title="düzensiz">${esc(x.duzensiz)}</span>`;
+    const kok = x.degisen !== undefined ? `${esc(x.kokOn)}<mark class="bc-degisen">${esc(x.degisen)}</mark>${esc(x.kokSon)}` : esc(x.kok);
+    return z + `<span class="bc">${kok}<span class="bc-ek ${k}">${esc(x.ek)}</span></span>`;
+  }
+  // "el padre" → artikel renkli (el / los mavi, la / las kırmızı)
+  function artikelHtml(es) {
+    const m = /^(el|la|los|las)\s+(.+)$/i.exec(String(es));
+    if (!m) return esc(es);
+    return `<span class="art-${/^(el|los)$/i.test(m[1]) ? 'e' : 'd'}">${esc(m[1])}</span> ${esc(m[2])}`;
+  }
+
   /* ---------- 📱 Telefon modu ----------
      Telefonda yazma soruları çoğunlukla dokunarak cevaplanan türlere dönüşür; yaklaşık %20'si yazma kalır. */
   const YAZMA_ORANI = 0.2;
@@ -300,6 +350,7 @@
 
   const Alistirma = {
     esc, karistir, kontrol, normal, kontrolTr, aksanKlavyesi, aksanBagla, sayiYazi, cogulYap, rakamUret, rakamNormal,
+    bicimParcala, bicimHtml, artikelHtml, KISI_SIRA,
 
     /* Çoktan seçmeli. yon: 'es' (İspanyolca göster, Türkçe seç) | 'tr' */
     sec(kelime, yon) {
@@ -709,7 +760,7 @@
           const soruHtml = `<p class="yonerge">🔧 Fiili çek</p>
             <div class="soru"><span class="es">${esc(c.fiil)}</span> <small class="okunus">${esc(c.tr)}</small></div>
             <div class="cekim-satir"><span class="es">${esc(etiket)}</span> <span class="cekim-bos">___</span></div>`;
-          const sonuc = (verilen, s) => bitti({ dogru: s.dogru, uyari: s.uyari, dogrusu: `${etiket.split(' / ')[0]} ${dogru} (${c.fiil})`, oku: `${etiket.split(' / ')[0]} ${dogru}`, soru: `${c.fiil} (${c.tr}) → ${etiket}`, verilen });
+          const sonuc = (verilen, s) => bitti({ dogru: s.dogru, uyari: s.uyari, dogrusu: `${etiket.split(' / ')[0]} ${dogru} (${c.fiil})`, oku: `${etiket.split(' / ')[0]} ${dogru}`, soru: `${c.fiil} (${c.tr}) → ${etiket}`, verilen, bicim: { fiil: c.fiil, bicim: dogru, kisi } });
           if (mod === 'sec') {
             const siklar = karistir([dogru, ...karistir([...new Set(KISILER.map((x) => c[x[0]]).filter((f) => f && f !== dogru))]).slice(0, 3)]);
             alan.innerHTML = soruHtml + `<div class="siklar">${siklar.map((f, i) => `<button class="sik" data-i="${i}"><span class="no">${i + 1}</span>${esc(f)}</button>`).join('')}</div>`;

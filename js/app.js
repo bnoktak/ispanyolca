@@ -459,7 +459,7 @@
         <header class="ust"><button class="ikon geri">×</button>
           <div class="ilerleme"><div style="width:${(bilinen / toplam) * 100}%"></div></div><span class="sayac">${bilinen}/${toplam}</span></header>
         <div class="flip" tabindex="0"><div class="flip-ic">
-          <div class="yuz on"><span class="es">${esc(k.es)}</span>${Ses.aktif() && Ses.okunurMu(k) ? '<button type="button" class="ses kart-ses" title="Dinle (S)">🔊</button>' : ''}<small>Çevirmek için dokun (boşluk)</small></div>
+          <div class="yuz on"><span class="es">${Alistirma.artikelHtml(k.es)}</span>${Ses.aktif() && Ses.okunurMu(k) ? '<button type="button" class="ses kart-ses" title="Dinle (S)">🔊</button>' : ''}<small>Çevirmek için dokun (boşluk)</small></div>
           <div class="yuz arka"><span>${esc(k.tr)}</span>${k.en && ingilizce() ? `<span class="en">🇬🇧 ${esc(k.en)}</span>` : ''}${k.ipucu ? `<small>💡 ${esc(k.ipucu)}</small>` : ''}</div>
         </div></div>
         <button class="ana-buton tam biliyorum">Sonraki →</button>`;
@@ -509,7 +509,7 @@
       const sesli = Ses.aktif();
       kok.innerHTML = `${baslik}
         <div class="flip mini" tabindex="0"><div class="flip-ic">
-          <div class="yuz on"><span class="es">${esc(k.es)}</span>${sesli && Ses.okunurMu(k) ? '<button type="button" class="ses kart-ses" data-oku="kelime" title="Dinle (S)">🔊</button>' : ''}
+          <div class="yuz on"><span class="es">${Alistirma.artikelHtml(k.es)}</span>${sesli && Ses.okunurMu(k) ? '<button type="button" class="ses kart-ses" data-oku="kelime" title="Dinle (S)">🔊</button>' : ''}
             ${c ? `<p class="mini-cumle">${esc(c.es)}${sesli ? ' <button type="button" class="ses mini-ses" data-oku="cumle" title="Cümleyi dinle">🔊</button>' : ''}</p>` : ''}
             <small>Türkçesi için dokun</small></div>
           <div class="yuz arka"><span>${esc(k.tr)}</span>${k.en && ingilizce() ? `<span class="en">🇬🇧 ${esc(k.en)}</span>` : ''}
@@ -597,6 +597,8 @@
       let ic = `<b>${s.dogru ? (s.uyari ? 'Neredeyse!' : 'Doğru! 🎉') : 'Yanlış'}</b>`;
       if (s.mesaj) ic += `<p>${esc(s.mesaj)}</p>`;
       if (s.metin) ic += `<p class="detay-metin">🎧 ${esc(s.metin)}${s.metinTr ? `<br><i>${esc(s.metinTr)}</i>` : ''}</p>`;
+      // 🎨 çekim sorularında doğru biçim renkli: kök · ek, değişen ünlü, düzensiz
+      if (s.bicim) ic += `<p class="bicim-satir">🔧 ${esc(s.bicim.fiil)} → ${Alistirma.bicimHtml(s.bicim.fiil, s.bicim.bicim, s.bicim.kisi)}</p>`;
       if (s.uyari) ic += `<p>${esc(s.uyari)} <b>${esc(s.dogrusu)}</b></p>`;
       else if (!s.dogru && s.dogrusu) ic += `<p>Doğrusu: <b>${esc(s.dogrusu)}</b></p>`;
       if (s.en && ingilizce()) ic += `<p class="en">🇬🇧 ${esc(s.en)}</p>`;
@@ -955,9 +957,29 @@
     const kisiler = KT.kisiler.filter((x) => acikMi(x.uid));
     const gruplar = KT.gruplar.map((g) => ({ ...g, sutunlar: g.sutunlar.filter((c) => kisiler.some((x) => c[x.k] && acikMi(c[x.k][1]))) })).filter((g) => g.sutunlar.length);
     const fiiller = ICERIK.uniteler.filter((u) => u.sira <= acikSira).flatMap((u) => (u.cekimler || []).map((c) => ({ ...c, uid: u.id })));
-    const hucre = (c, x) => { const v = c[x.k]; if (!v || !acikMi(v[1])) return '<td class="bos">–</td>'; return c.tr ? `<td class="tr">${satirli(v[0])}</td>` : `<td class="es">${sesli(v[0])}</td>`; };
+    // 🎨 renkli hücreler: okunacak düz metin + gösterilecek html (satır satır)
+    const okuHtml = (m, htmlFn) => String(m).split('\n').map((t) => {
+      const ic = htmlFn(t);
+      return Ses.aktif() ? `<span class="oku" data-ses="${esc(t.replace(/ \/ /g, ', '))}" title="Dinlemek için tıkla">${ic}</span>` : ic;
+    }).join('<br>');
+    const renkli = (k) => (t) => `<span class="k-${k}">${esc(t)}</span>`;
+    // kişi sütunlarında yalnızca kişiye göre değişen kelimeler renklenir: "me gusta" → [me] gusta
+    const ortakKelime = (c) => {
+      const say = new Map(), kisiSay = kisiler.filter((x) => c[x.k]).length;
+      kisiler.forEach((x) => { if (c[x.k]) new Set(c[x.k][0].toLowerCase().split(/[\s\n]+/)).forEach((w) => say.set(w, (say.get(w) || 0) + 1)); });
+      return new Set([...say].filter(([, n]) => n === kisiSay && kisiSay > 1).map(([w]) => w));
+    };
+    const grupHucreHtml = (c, x) => { const ortak = ortakKelime(c); return okuHtml(c[x.k][0], (t) => t.split(' ').map((w) => (ortak.has(w.toLowerCase()) ? `<span class="ortak">${esc(w)}</span>` : `<span class="k-${x.k}">${esc(w)}</span>`)).join(' ')); };
+    const fiilHucreHtml = (f, k) => (f[k] ? okuHtml(f[k], () => Alistirma.bicimHtml(f.fiil, f[k], k)) : '–');
+    const renkAciklama = `<p class="renk-aciklama">
+        <span><span class="bc">habl<span class="bc-ek k-yo">o</span></span> kök · ek</span>
+        <span><span class="bc">qu<mark class="bc-degisen">ie</mark>r<span class="bc-ek k-yo">o</span></span> değişen</span>
+        <span><span class="bc-duzensiz k-yo">soy</span> düzensiz</span>
+        <span class="kisi-renkler">${[['yo', 'yo'], ['tu', 'tú'], ['el', 'él'], ['nos', 'nos.'], ['ellos', 'ellos']].map(([k, a]) => `<b class="k-${k}">${a}</b>`).join(' ')}</span></p>`;
+    const hucre = (c, x) => { const v = c[x.k]; if (!v || !acikMi(v[1])) return '<td class="bos">–</td>'; return c.tr ? `<td class="tr">${satirli(v[0])}</td>` : `<td class="es">${grupHucreHtml(c, x)}</td>`; };
     const kisiHtml = kisiler.length ? `<section class="kutu ozet-kutu"><h3>🧑 Kişilere göre: zamir, sahiplik, fiiller</h3>
       <p class="aciklama">Her satır bir kişi. Sağa kaydırınca öğrendiğin tüm fiillerin çekimi gelir; ilk iki sütun yerinde kalır.</p>
+      ${renkAciklama}
       <div class="tablo-kaydir"><table class="kisi-tablo">
         <tr class="grup-satir"><th class="sabit s1" colspan="2">Kişi</th>
           ${gruplar.map((g) => `<th colspan="${g.sutunlar.length}" class="grup-bas">${g.baslik}</th>`).join('')}
@@ -965,9 +987,9 @@
         <tr><th class="sabit s1">Türkçe</th><th class="sabit s2">İspanyolca</th>
           ${gruplar.map((g) => g.sutunlar.map((c, i) => `<th class="${i === 0 ? 'grup-ilk' : ''}">${esc(c.ad)}</th>`).join('')).join('')}
           ${fiiller.map((f, i) => `<th class="fiil-bas ${i === 0 ? 'grup-ilk' : ''}">${esc(f.fiil)}<small>${esc(f.tr)} · Ü${sira(f.uid)}</small></th>`).join('')}</tr>
-        ${kisiler.map((x) => `<tr><td class="sabit s1 tr">${satirli(x.tr)}</td><td class="sabit s2 es">${sesli(x.es)}</td>
+        ${kisiler.map((x) => `<tr><td class="sabit s1 tr">${satirli(x.tr)}</td><td class="sabit s2 es">${okuHtml(x.es, renkli(x.k))}</td>
           ${gruplar.map((g) => g.sutunlar.map((c, i) => hucre(c, x).replace('<td class="', `<td class="${i === 0 ? 'grup-ilk ' : ''}`)).join('')).join('')}
-          ${fiiller.map((f, i) => `<td class="es ${i === 0 ? 'grup-ilk' : ''}">${sesli(f[x.k])}</td>`).join('')}</tr>`).join('')}
+          ${fiiller.map((f, i) => `<td class="es fiil ${i === 0 ? 'grup-ilk' : ''}">${fiilHucreHtml(f, x.k)}</td>`).join('')}</tr>`).join('')}
       </table></div></section>` : '';
     // 2a) 📱 KİŞİ KARTI (telefon için): üstte kişi düğmeleri, seçilen kişinin zamiri, sahipliği ve tüm fiil çekimleri alt alta
     const gorunum = Cihaz.al('ozetGorunum') || (Cihaz.telefon() ? 'kartlar' : 'tablo');
@@ -975,13 +997,14 @@
       const x = kisiler.find((y) => y.k === secK) || kisiler[0];
       const grupHtml = gruplar.map((g) => {
         const satirlar = g.sutunlar.filter((c) => c[x.k] && acikMi(c[x.k][1]))
-          .map((c) => `<tr><td class="${c.tr ? '' : 'tr'}">${esc(c.ad)}</td><td class="${c.tr ? 'tr' : 'es'}">${c.tr ? satirli(c[x.k][0]) : sesli(c[x.k][0])}</td></tr>`).join('');
+          .map((c) => `<tr><td class="${c.tr ? '' : 'tr'}">${esc(c.ad)}</td><td class="${c.tr ? 'tr' : 'es'}">${c.tr ? satirli(c[x.k][0]) : grupHucreHtml(c, x)}</td></tr>`).join('');
         return satirlar ? `<h5>${g.baslik}</h5><table class="ozet-tablo">${satirlar}</table>` : '';
       }).join('');
       const fiilHtml = fiiller.length ? `<h5>🔧 Fiiller (şimdiki zaman)</h5><table class="ozet-tablo">
-        ${fiiller.map((f) => `<tr><td class="es">${sesli(f.fiil)}<br><small class="fiil-tr">${esc(f.tr)} · Ü${sira(f.uid)}</small></td><td class="es">${f[x.k] ? sesli(f[x.k]) : '–'}</td></tr>`).join('')}</table>` : '';
-      return `<div class="kisi-dugmeler">${kisiler.map((y) => `<button type="button" data-kisi="${y.k}" class="${y === x ? 'secili' : ''}">${esc(y.es.split('\n')[0].split(' / ')[0])}</button>`).join('')}</div>
-        <div class="zamir">${sesli(x.es)}<small>${satirli(x.tr)}</small></div>${grupHtml}${fiilHtml}`;
+        ${fiiller.map((f) => `<tr><td class="es">${sesli(f.fiil)}<br><small class="fiil-tr">${esc(f.tr)} · Ü${sira(f.uid)}</small></td><td class="es fiil">${fiilHucreHtml(f, x.k)}</td></tr>`).join('')}</table>` : '';
+      return `<div class="kisi-dugmeler">${kisiler.map((y) => `<button type="button" data-kisi="${y.k}" class="k-dugme-${y.k} ${y === x ? 'secili' : ''}">${esc(y.es.split('\n')[0].split(' / ')[0])}</button>`).join('')}</div>
+        ${renkAciklama}
+        <div class="zamir">${okuHtml(x.es, renkli(x.k))}<small>${satirli(x.tr)}</small></div>${grupHtml}${fiilHtml}`;
     };
     const kisiBolum = !kisiler.length ? '' : gorunum === 'kartlar'
       ? `<section class="kutu ozet-kutu kisi-kart"><h3>🧑 Kişilere göre: zamir, sahiplik, fiiller</h3><div id="kisi-kart">${kisiKartHtml(Cihaz.al('ozetKisi'))}</div></section>`
@@ -1006,7 +1029,7 @@
     const kelimeHtml = `<section class="kutu ozet-kutu"><h3>📖 Tüm kelimeler (${uniteler.reduce((a, u) => a + u.kelimeler.filter((k) => k.yazma !== false).length, 0)})</h3>
       <input type="search" class="ozet-ara" placeholder="Ara: İspanyolca ya da Türkçe…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       ${uniteler.map((u) => `<details class="ozet-unite" ${u.sira === acikSira ? 'open' : ''}><summary>${u.emoji} ${u.sira}. ${esc(u.baslik)}</summary>
-        <table class="kelime-tablo">${u.kelimeler.filter((k) => k.yazma !== false).map((k) => `<tr data-ara="${esc((k.es + ' ' + k.tr + ' ' + (k.en || '')).toLocaleLowerCase('tr'))}"><td>${Ses.okunurMu(k) ? sesli(k.es) : esc(k.es)}</td><td>${esc(k.tr)}</td></tr>`).join('')}</table>
+        <table class="kelime-tablo">${u.kelimeler.filter((k) => k.yazma !== false).map((k) => `<tr data-ara="${esc((k.es + ' ' + k.tr + ' ' + (k.en || '')).toLocaleLowerCase('tr'))}"><td>${Ses.okunurMu(k) ? okuHtml(k.es, Alistirma.artikelHtml) : Alistirma.artikelHtml(k.es)}</td><td>${esc(k.tr)}</td></tr>`).join('')}</table>
       </details>`).join('')}</section>`;
     kok.innerHTML = `
       <header class="ust"><button class="ikon geri">←</button><div class="ust-baslik">📚 Özet tablolar</div><span></span></header>
