@@ -10,6 +10,7 @@
      kelimeler : her kelimede en son cevaplanan (son) kalır
      uniteler  : adımlar / tamamlandı birleşir (VEYA), en iyi skor büyük olan
      puanlar   : iki günlük birleşir, aynı cevap bir kez; puanı olan kayıt tercih edilir
+     karisan   : karıştırılan ikililer birleşir, en yeni zaman (en çok 300)
      ayarlar   : en son güncellenen verininki; cihaza özel ayarlar (ses, son yedek) her cihazda kendi kalır
      sifirlama : büyük olan; ondan eski kelime/puan kayıtları ve sıfırlanmış verinin üniteleri alınmaz
    ========================================================= */
@@ -72,6 +73,14 @@
     let puanlar = [...puanMap.values()].sort((x, y) => x.t - y.t);
     if (puanlar.length > sinir) puanlar = puanlar.slice(puanlar.length - sinir);
 
+    // karıştırılan ikililer: birleşim, en yeni zaman; sıfırlamadan öncekiler alınmaz
+    const karisan = {};
+    [yerel, uzak].forEach((v) => Object.entries(v.karisan || {}).forEach(([a, t]) => {
+      if ((t || 0) >= sif && (t || 0) > (karisan[a] || 0)) karisan[a] = t;
+    }));
+    const kAnahtar = Object.keys(karisan);
+    if (kAnahtar.length > 300) kAnahtar.sort((x, y) => karisan[x] - karisan[y]).slice(0, kAnahtar.length - 300).forEach((a) => delete karisan[a]);
+
     // ayarlar: daha yeni verininki, cihaza özel olanlar yereldeki gibi.
     // Hiç çalışılmamış (boş) veri "daha yeni" sayılmaz: yeni telefon bilgisayardaki ayarları ezmesin
     const bosMu = (v) => !Object.keys(v.kelimeler || {}).length && !Object.keys(v.uniteler || {}).length;
@@ -85,7 +94,8 @@
       surum: Math.max(yerel.surum || 1, uzak.surum || 1),
       olusturulma: Math.min(yerel.olusturulma || Date.now(), uzak.olusturulma || Date.now()),
       guncelleme: Math.max(yerel.guncelleme || 0, uzak.guncelleme || 0),
-      sifirlama: sif, uniteler, kelimeler, puanlar, ayarlar
+      sifirlama: sif, uniteler, kelimeler, puanlar, ayarlar,
+      ...(yerel.karisan || uzak.karisan ? { karisan } : {})   // eski veride alan yoksa eklenmez (gereksiz yükleme olmasın)
     };
   }
 

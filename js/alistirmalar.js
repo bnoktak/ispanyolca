@@ -89,25 +89,113 @@
     return liste.filter((k) => { const c = cekirdek(k); if (goruldu.has(c)) return false; goruldu.add(c); return true; });
   }
 
-  /* ---- yanıltıcı şık seçimi: önce aynı üniteden ---- */
+  /* =========================================================
+     🎯 AKILLI YANLIŞ ŞIKLAR
+     Rastgele değil, doğru cevaba benzeyen kelimeler: aynı tür (isim ↔ isim, mastar ↔ mastar, çekim ↔ çekim,
+     kalıp ↔ kalıp…), aynı grup / tema (çatal → kaşık, bıçak), yazılışı yakın (cuchara / cuchillo),
+     daha önce karıştırdığın kelime. Her seferinde en yakın adaylardan biraz farklı üçü (ezber olmasın).
+     Öğretilmemiş kelime hiç çıkmaz (sınır: Alistirma.sinirSira).
+     ========================================================= */
+  const benzerlikNormal = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[¿?¡!.,;:"…]/g, '').trim();
+  const govde = (k) => benzerlikNormal(k.es.split(' / ')[0].replace(/^(el|la|los|las) (\/ la )?/i, ''));
+  let _dizin = null;     // içerik değişmez: bir kez kurulur
+  function kelimeDizini() {
+    if (_dizin) return _dizin;
+    const grup = new Map(), tema = new Map(), cekim = new Map();
+    ICERIK.uniteler.concat(ICERIK.ekler || []).forEach((u) => {
+      (u.gruplar || []).forEach(([ad, ekler]) => ekler.forEach((e) => grup.set(`${u.id}_${e}`, `${u.id}|${ad}`)));
+      // çekimli biçimler: "soy" → { fiil: 'ser', kisi: 'yo' }
+      (u.cekimler || []).forEach((c) => ['yo', 'tu', 'el', 'nos', 'ellos'].forEach((kisi) => String(c[kisi] || '').split(/\n| \/ /).forEach((f) => {
+        const n = benzerlikNormal(f); if (n && !cekim.has(n)) cekim.set(n, { fiil: c.fiil, kisi });
+      })));
+    });
+    (ICERIK.temalar || []).forEach((t) => {
+      const ekle = (id) => { if (!tema.has(id)) tema.set(id, new Set()); tema.get(id).add(t.id); };
+      (t.bolumler || []).forEach((b) => {
+        const ids = b.kelimeler || ((((ICERIK.bul(b.grup[0]) || {}).gruplar || []).find((g) => g[0] === b.grup[1]) || [null, []])[1]).map((e) => `${b.grup[0]}_${e}`);
+        ids.forEach(ekle);
+      });
+      [...(t.ciftler || []).flat(), ...(t.tekler || [])].forEach(ekle);
+    });
+    return (_dizin = { grup, tema, cekim });
+  }
+  // kelimenin türü: biçimden ve Türkçe anlamdan
+  function kelimeTuru(k) {
+    if (k.yazma === false) return { tur: 'harf' };
+    const es = k.es.trim(), ilk = es.split(' / ')[0];
+    if (/[¿?]/.test(es)) return { tur: 'soru' };
+    const art = /^(el|los|la|las)\b/i.exec(es);
+    if (art) return { tur: 'isim', cins: /^(el|los)$/i.test(art[1]) ? 'e' : 'd', cogul: /^(los|las)$/i.test(art[1]) };
+    if (/^[\d½]/.test(k.tr)) return { tur: 'sayi' };
+    const ck = kelimeDizini().cekim.get(benzerlikNormal(ilk));
+    if (ck && !/m[ae]k\b/.test(k.tr)) return { tur: 'cekim', fiil: ck.fiil, kisi: ck.kisi };
+    if (/\s/.test(ilk)) return { tur: 'kalip' };
+    if (/(ar|er|ir|arse|erse|irse)$/i.test(ilk) && /m[ae]k\b/.test(k.tr)) return { tur: 'fiil' };
+    if (/ \/ /.test(es) && /[oa]s?$/.test(ilk)) return { tur: 'sifat' };
+    return { tur: 'kelime' };
+  }
+  // 0–1 arası yazılış benzerliği (harf farkına göre)
+  function yaziBenzerligi(a, b) {
+    if (!a || !b) return 0;
+    const f = harfFarki(a, b); if (f >= 99) return 0;
+    return Math.max(0, 1 - f / Math.max(a.length, b.length));
+  }
+  // 💭 karıştırdığın ikililer (Depo.veri.karisan, senkronla birleşir): { "id1|id2": zaman }
+  const karisanAnahtar = (a, b) => [a, b].sort().join('|');
+  function karisanMi(a, b) { const v = (window.Depo && Depo.veri && Depo.veri.karisan) || {}; return !!v[karisanAnahtar(a, b)]; }
+
+  function celdiriciPuani(hedef, ht, k, alan) {
+    const kt = kelimeTuru(k), d = kelimeDizini();
+    let p = 0;
+    if (kt.tur === ht.tur) p += 10;
+    else if ((kt.tur === 'kalip' && ht.tur === 'soru') || (kt.tur === 'soru' && ht.tur === 'kalip')) p += 5;
+    else if ((kt.tur === 'kelime' && ['sifat', 'cekim'].includes(ht.tur)) || (ht.tur === 'kelime' && ['sifat', 'cekim'].includes(kt.tur))) p += 3;
+    if (ht.tur === 'isim' && kt.tur === 'isim') p += (kt.cins === ht.cins ? 2 : 0) + (kt.cogul === ht.cogul ? 1 : 0);
+    if (ht.tur === 'cekim' && kt.tur === 'cekim') p += (kt.fiil === ht.fiil ? 8 : 0) + (kt.kisi === ht.kisi ? 3 : 0);
+    if (d.grup.has(hedef.id) && d.grup.get(hedef.id) === d.grup.get(k.id)) p += 6;
+    const t1 = d.tema.get(hedef.id), t2 = d.tema.get(k.id);
+    if (t1 && t2 && [...t1].some((x) => t2.has(x))) p += 4;
+    if (k.unite === hedef.unite) p += 2;
+    p += yaziBenzerligi(govde(hedef), govde(k)) * (alan === 'es' ? 7 : 3);
+    const uz = (x) => String(x[alan]).length;
+    p -= Math.min(3, Math.abs(uz(hedef) - uz(k)) / 6);
+    if (karisanMi(hedef.id, k.id)) p += 12;
+    return p;
+  }
+
   function celdiriciler(kelime, alan, adet) {
     const unite = ICERIK.bul(kelime.unite);
-    const ayni = unite.kelimeler;
     // ileride öğreneceğin kelimeler şık olarak çıkmasın
     const sinir = Alistirma.sinirSira(unite);
-    const tum = ICERIK.uniteler.filter((u) => u.sira <= sinir).flatMap((u) => u.kelimeler);
-    const kullanildi = new Set([kelime[alan]]);
+    const tum = ICERIK.uniteler.filter((u) => u.sira <= sinir).flatMap((u) => u.kelimeler).concat(unite.ek ? unite.kelimeler : []);
+    const ht = kelimeTuru(kelime);
+    // her seferinde biraz farklı: puana küçük bir rastgelelik eklenir
+    const adaylar = tum.filter((k) => k.id !== kelime.id && (k.yazma === false) === (kelime.yazma === false))   // harf ↔ harf, kelime ↔ kelime
+      .map((k) => ({ k, p: celdiriciPuani(kelime, ht, k, alan) + Math.random() * 4 }))
+      .sort((a, b) => b.p - a.p);
+    const kullanildi = new Set([benzerlikNormal(kelime[alan])]);
     const anlamlar = new Set([cekirdek(kelime)]);
     const sonuc = [];
-    for (const havuz of [karistir(ayni), karistir(tum)]) {
-      for (const k of havuz) {
-        if (sonuc.length >= adet) break;
-        if (kullanildi.has(k[alan]) || anlamlar.has(cekirdek(k))) continue;
-        if ((k.yazma === false) !== (kelime.yazma === false)) continue; // harf ↔ harf, kelime ↔ kelime
-        kullanildi.add(k[alan]); anlamlar.add(cekirdek(k)); sonuc.push(k);
-      }
+    for (const { k } of adaylar) {
+      if (sonuc.length >= adet) break;
+      const m = benzerlikNormal(k[alan]);
+      if (kullanildi.has(m) || anlamlar.has(cekirdek(k))) continue;
+      kullanildi.add(m); anlamlar.add(cekirdek(k)); sonuc.push(k);
     }
     return sonuc;
+  }
+
+  // Cümle şıkları: aynı kelimeleri / kalıbı paylaşan, uzunluğu yakın cümleler (yine biraz rastgele)
+  const kelimeleri = (s) => new Set(benzerlikNormal(s).split(/\s+/).filter(Boolean));
+  function cumleBenzerligi(a, b) {
+    const x = kelimeleri(a), y = kelimeleri(b); if (!x.size || !y.size) return 0;
+    let ortak = 0; x.forEach((w) => { if (y.has(w)) ortak++; });
+    const bas = benzerlikNormal(a).split(' ')[0] === benzerlikNormal(b).split(' ')[0] ? 0.3 : 0;
+    return ortak / Math.max(x.size, y.size) + bas - Math.min(0.3, Math.abs(x.size - y.size) * 0.05);
+  }
+  function benzerCumleler(hedef, adaylar, adet, metin = (c) => c) {
+    return adaylar.map((c) => ({ c, p: cumleBenzerligi(metin(hedef), metin(c)) + Math.random() * 0.35 }))
+      .sort((a, b) => b.p - a.p).slice(0, adet).map((x) => x.c);
   }
 
   // Okunuş kurallarına göre akla yatkın yanlış yazılışlar üret: llave → yave, lave …
@@ -349,6 +437,16 @@
   const sesButonu = (metin) => (Ses.aktif() ? ` <button type="button" class="ses" data-ses="${esc(metin)}" title="Dinle">🔊</button>` : '');
 
   const Alistirma = {
+    kelimeTuru, celdiriciler, benzerCumleler,
+    // yanlış şık seçilince o ikili hatırlanır; sonraki sorularda yine birlikte çıkar (en yeni 300 ikili)
+    karisanKaydet(a, b) {
+      if (!window.Depo || !Depo.veri || !a || !b || a === b) return;
+      const v = Depo.veri.karisan || (Depo.veri.karisan = {});
+      v[karisanAnahtar(a, b)] = Date.now();
+      const anahtarlar = Object.keys(v);
+      if (anahtarlar.length > 300) anahtarlar.sort((x, y) => v[x] - v[y]).slice(0, anahtarlar.length - 300).forEach((k) => delete v[k]);
+      Depo.kaydet();
+    },
     esc, karistir, kontrol, normal, kontrolTr, aksanKlavyesi, aksanBagla, sayiYazi, cogulYap, rakamUret, rakamNormal,
     bicimParcala, bicimHtml, artikelHtml, KISI_SIRA,
 
@@ -367,6 +465,7 @@
           const sec = (i) => {
             if (bitmis) return; bitmis = true;
             const dogru = siklar[i].id === kelime.id;
+            if (!dogru) Alistirma.karisanKaydet(kelime.id, siklar[i].id);
             alan.querySelectorAll('.sik').forEach((b, j) => {
               b.disabled = true;
               if (siklar[j].id === kelime.id) b.classList.add('dogru');
@@ -491,6 +590,7 @@
                 b.disabled = true;
                 if (siklar[j].id === kelime.id) b.classList.add('dogru'); else if (j === i) b.classList.add('yanlis');
               });
+              if (siklar[i].id !== kelime.id) Alistirma.karisanKaydet(kelime.id, siklar[i].id);
               sonuc(siklar[i].id === kelime.id, { verilen: siklar[i].tr });
             };
             alan.querySelectorAll('.sik').forEach((b) => b.addEventListener('click', () => sec(+b.dataset.i)));
@@ -571,7 +671,7 @@
       return {
         tur: 'dinle_anlam', anahtar: cumle.es,
         render(alan, bitti) {
-          const diger = karistir(tumCumleler.filter((c) => c !== cumle && c.tr !== cumle.tr)).slice(0, 2);
+          const diger = benzerCumleler(cumle, tumCumleler.filter((c) => c !== cumle && c.tr !== cumle.tr), 2, (c) => c.es);
           const siklar = karistir([cumle, ...diger]);
           alan.innerHTML = `
             <p class="yonerge">🎧 Dinle: ne dedi?</p>
@@ -868,7 +968,8 @@
       return {
         tur: sesli ? 'sc_dinle' : 'sc_sec', anahtar: 'sc:' + cift[0],
         render(alan, bitti) {
-          const diger = karistir(havuz.filter(uygun)).slice(0, 2).map((x) => x[1]);
+          // cevabına benzeyen ama başka bir soruya ait cevaplar (sorusu çok benzeyenler de doğru olabilir: alınmaz)
+          const diger = benzerCumleler(cift, havuz.filter(uygun).filter((x) => cumleBenzerligi(x[0], cift[0]) < 0.5), 2, (x) => x[1]).map((x) => x[1]);
           const siklar = karistir([cift[1], ...diger]);
           alan.innerHTML = `<p class="yonerge">${sesli ? '🎧 Sana soruldu. Doğru cevap hangisi?' : '💬 Doğru cevap hangisi?'}</p>
             ${sesli ? `<div class="dinle-alan"><button type="button" class="dinle-buton" title="Tekrar dinle">🔊</button><button type="button" class="yavas-buton">🐢 yavaş</button></div>`

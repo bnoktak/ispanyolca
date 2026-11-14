@@ -5,7 +5,7 @@ const { spawnSync } = require('child_process'), path = require('path'), fs = req
 const KOK = path.resolve(__dirname, '..'), CIKTI = path.join(__dirname, 'ciktilar');
 
 // sıra önemli: widget, scriptable'ın ürettiği widget-kart.html'i kullanır
-const TESTLER = ['birlestir', 'pwa', 'senkron', 'telefon', 'telefon2', 'ses', 'mini', 'scriptable', 'widget', 'buyuk', 'dinleme', 'renk', 'ozet'];
+const TESTLER = ['birlestir', 'pwa', 'senkron', 'telefon', 'telefon2', 'ses', 'siklar', 'mini', 'scriptable', 'widget', 'buyuk', 'dinleme', 'renk', 'ozet'];
 // zamanlamaya duyarlı testler bir kez daha denenir
 const TEKRAR_DENE = ['telefon', 'telefon2'];
 const secili = process.argv.slice(2).length ? process.argv.slice(2) : TESTLER;

@@ -27,6 +27,7 @@
       uniteler: {},      // { u01: { adimlar:{not,kart,alistirma}, tamamlandi, enIyiSkor } }
       kelimeler: {},     // { kelimeId: { kutu, sonraki, dogru, yanlis, son } }
       puanlar: [],       // cevap günlüğü + 1–3 zorluk puanları (js/puan.js)
+      karisan: {},       // karıştırılan kelime ikilileri { 'id1|id2': zaman }: yanlış şıklarda yine birlikte çıkar
       ayarlar: {}
     };
   }

@@ -76,5 +76,17 @@ const kel = (son, kutu, dogru = 1, yanlis = 0) => ({ kutu, sonraki: son + 1, dog
     test(`gerçek ilerleme (${Object.keys(v.kelimeler).length} kelime, ${v.puanlar.length} cevap) kendisiyle birleşince aynı`, ayniMi(birlestir(v, JSON.parse(JSON.stringify(v))), v));
   }
 }
+// karıştırılan ikililer: birleşir, en yeni zaman, sıfırlamadan öncekiler gelmez, alan yoksa eklenmez
+{
+  const pc = bos({ karisan: { 'a|b': 100, 'c|d': 300 } }), tel = bos({ karisan: { 'a|b': 200, 'e|f': 250 } });
+  const s = birlestir(pc, tel);
+  test('karıştırılan ikililer birleşiyor, en yeni zaman kalıyor', s.karisan['a|b'] === 200 && s.karisan['c|d'] === 300 && s.karisan['e|f'] === 250, s.karisan);
+  const sif = birlestir(bos({ sifirlama: 260, karisan: {} }), tel);
+  test('sıfırlamadan önce karıştırılanlar geri gelmiyor', !sif.karisan['a|b'] && !sif.karisan['e|f'], sif.karisan);
+  test('iki tarafta da alan yoksa eklenmiyor', !('karisan' in birlestir(bos(), bos())));
+  const cok = {}; for (let i = 0; i < 320; i++) cok['x' + i + '|y'] = 1000 + i;
+  const c = birlestir(bos({ karisan: cok }), bos());
+  test('en çok 300 ikili tutuluyor (en yeniler)', Object.keys(c.karisan).length === 300 && !c.karisan['x0|y'] && c.karisan['x319|y']);
+}
 function duzEsit(a, b) { return ayniMi(a, b); }
 console.log(`\n${gecti} geçti, ${kaldi} kaldı`);
