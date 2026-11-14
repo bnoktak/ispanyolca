@@ -760,6 +760,8 @@
     tusAyarla(null);
     const d = await Depo.durum();
     const son = gunFarki(Depo.veri.ayarlar.sonYedek);
+    // ses listesinde seçili olan: karışık (havuzda 2+ ses varsa) ya da o an kullanılan sesin adı
+    const sesSecili = Ses.sesVar() ? (Ses.havuz().length > 1 && Ses.secim() === 'karisik' ? 'karisik' : (Ses.secili() || {}).name) : null;
     kok.innerHTML = `
       <header class="ust"><button class="ikon geri">←</button><div class="ust-baslik">⚙️ Ayarlar</div><span></span></header>
       <section class="kutu">
@@ -795,7 +797,9 @@
         ${Ses.sesVar() ? `
           <label class="satir"><input type="checkbox" id="ses-acik" ${Ses.ayar().ses !== false ? 'checked' : ''}> Sesli okuma ve dinleme alıştırmaları açık</label>
           <label class="satir"><input type="checkbox" id="oto-oku" ${Ses.ayar().otoOku !== false ? 'checked' : ''}> Kartlarda ve cevaptan sonra otomatik oku</label>
-          <label class="satir">Ses: <select id="ses-sec">${Ses.sesler.map((v) => `<option value="${esc(v.name)}" ${Ses.secili() && Ses.secili().name === v.name ? 'selected' : ''}>${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select></label>
+          <label class="satir">Ses: <select id="ses-sec">${Ses.havuz().length > 1 ? `<option value="karisik" ${sesSecili === 'karisik' ? 'selected' : ''}>🎲 Karışık (${esc(Ses.havuz().map((v) => Ses.kisiAdi(v)).join(' + '))})</option>` : ''}
+            ${Ses.iyiSesler().map((v) => `<option value="${esc(v.name)}" ${sesSecili === v.name ? 'selected' : ''}>${esc(v.name)} (${esc(v.lang)})</option>`).join('')}</select></label>
+          <p class="aciklama">Ses seçimi yalnızca bu cihazda geçerli. iPhone'da daha doğal ses için: Ayarlar → Erişilebilirlik → Seslendirilen İçerik → Sesler → İspanyolca → Paulina (México) ve Carlos (Colombia) "Gelişmiş" sürümlerini indir.</p>
           <label class="satir">Hız: <select id="ses-hiz">
             ${[[0.7, 'Yavaş'], [0.9, 'Normal'], [1.05, 'Hızlı']].map(([h, a]) => `<option value="${h}" ${(Ses.ayar().sesHiz || 0.9) === h ? 'selected' : ''}>${a}</option>`).join('')}
           </select></label>
@@ -817,9 +821,14 @@
       const kaydetAyar = (k, v) => { Ses.ayar()[k] = v; Depo.kaydet(); };
       kok.querySelector('#ses-acik').addEventListener('change', (e) => kaydetAyar('ses', e.target.checked));
       kok.querySelector('#oto-oku').addEventListener('change', (e) => kaydetAyar('otoOku', e.target.checked));
-      kok.querySelector('#ses-sec').addEventListener('change', (e) => { kaydetAyar('sesAdi', e.target.value); Ses.oku('Hola, ¿cómo estás?'); });
+      kok.querySelector('#ses-sec').addEventListener('change', (e) => {
+        Cihaz.koy('sesSecim', e.target.value);
+        // karışıkta havuzdaki her ses kendini tanıtsın; tek seste o ses
+        if (e.target.value === 'karisik') Ses.tanit();
+        else Ses.oku('Hola, ¿cómo estás?');
+      });
       kok.querySelector('#ses-hiz').addEventListener('change', (e) => { kaydetAyar('sesHiz', +e.target.value); Ses.oku('Hola, ¿cómo estás?'); });
-      kok.querySelector('#ses-dene').addEventListener('click', () => Ses.oku('Hola, me llamo Ana. ¿Cómo te llamas?'));
+      kok.querySelector('#ses-dene').addEventListener('click', () => (Ses.secim() === 'karisik' && Ses.havuz().length > 1 ? Ses.tanit() : Ses.oku('Hola, me llamo Ana. ¿Cómo te llamas?')));
     }
     const not = kok.querySelector('#yedek-not');
     const hataYaz = (e) => { if (e && e.name === 'AbortError') return; not.textContent = '⚠️ ' + (e.message || e); };

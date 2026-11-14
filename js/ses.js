@@ -2,7 +2,7 @@
    SESLİ OKUMA
    Bilgisayarın kendi İspanyolca sesini kullanır (internet gerekmez).
    İspanyolca ses yoksa tüm ses özellikleri otomatik gizlenir.
-   Ayarlar: Depo.veri.ayarlar.ses (açık/kapalı), sesAdi, sesHiz, otoOku
+   Ayarlar: Depo.veri.ayarlar.ses (açık/kapalı), sesHiz, otoOku · ses seçimi: Cihaz 'sesSecim' (bu cihaza özel)
    ========================================================= */
 (function () {
   'use strict';
@@ -35,18 +35,51 @@
     aktif() { return this.sesVar() && this.ayar().ses !== false; },
     otoOku() { return this.aktif() && this.ayar().otoOku !== false; },
 
-    // Seçili ses → yoksa en uygun ses: es-MX, es-US, diğer Latin Amerika, es-ES sırası;
-    // aynı dilde "Gelişmiş/Enhanced/Premium" sesler (iPhone) ve cihazın kendi sesleri öne alınır
-    secili() {
-      const ad = this.ayar().sesAdi;
-      const kayitli = this.sesler.find((v) => v.name === ad);
-      if (kayitli) return kayitli;
-      const puan = (v) => {
-        const dil = /^es[-_]MX/i.test(v.lang) ? 0 : /^es[-_]US/i.test(v.lang) ? 1 : LATAM.test(v.lang) ? 2 : /^es[-_]ES/i.test(v.lang) ? 3 : 4;
-        const kalite = /enhanced|premium|gelişmiş|mejorad/i.test(v.name + ' ' + (v.voiceURI || '')) ? 0 : 1;
-        return dil * 4 + kalite * 2 + (v.localService ? 0 : 1);
-      };
-      return this.sesler.slice().sort((a, b) => puan(a) - puan(b))[0] || null;
+    // 🗣️ SES SEÇİMİ
+    // iPhone her dile "oyuncak" robot sesler de koyar (Eddy, Flo, Grandma…): anlaşılmazlar, hiç kullanılmaz.
+    // Aynı kişinin normal ve "Gelişmiş" sürümü varsa gelişmiş olan kalır.
+    // 🎲 Karışık (varsayılan): her metin havuzdaki seslerden biriyle okunur; aynı metin hep aynı sesle
+    // (metnin özetinden seçilir, tekrar dinleyince ses değişmez). Havuz: Paulina (Meksika) + Carlos (Kolombiya)
+    // varsa onlar; yoksa diğer Latin Amerika sesleri; o da yoksa hepsi.
+    // Seçim yalnızca bu cihazda geçerli (Cihaz 'sesSecim': 'karisik' ya da ses adı); senkrona girmez.
+    ROBOT: /^(Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Fred|Junior|Kathy|Ralph)\b/i,
+    TERCIH: ['Paulina', 'Carlos'],
+    kisiAdi(v) { return v.name.replace(/\s*[(\-–].*$/, '').trim(); },
+    gelismisMi(v) { return /enhanced|premium|gelişmiş|geliştirilmiş|mejorad|natural|neural/i.test(v.name + ' ' + (v.voiceURI || '')); },
+    iyiSesler() {
+      const kisiler = new Map();
+      this.sesler.filter((v) => !this.ROBOT.test(v.name)).forEach((v) => {
+        const k = this.kisiAdi(v) + '|' + v.lang, eski = kisiler.get(k);
+        if (!eski || (this.gelismisMi(v) && !this.gelismisMi(eski))) kisiler.set(k, v);
+      });
+      const puan = (v) => (/^es[-_]MX/i.test(v.lang) ? 0 : LATAM.test(v.lang) ? 1 : /^es[-_]ES/i.test(v.lang) ? 3 : 2) * 4 + (this.gelismisMi(v) ? 0 : 2) + (v.localService ? 0 : 1);
+      const liste = [...kisiler.values()].sort((a, b) => puan(a) - puan(b));
+      return liste.length ? liste : this.sesler.slice();   // hepsi robotsa (olmamalı) yine de ses olsun
+    },
+    havuz() {
+      const iyi = this.iyiSesler();
+      const tercih = this.TERCIH.map((ad) => iyi.find((v) => this.kisiAdi(v).toLowerCase() === ad.toLowerCase())).filter(Boolean);
+      if (tercih.length) return tercih;
+      const latin = iyi.filter((v) => LATAM.test(v.lang));
+      return latin.length ? latin : iyi;
+    },
+    secim() { return (window.Cihaz && Cihaz.al('sesSecim')) || 'karisik'; },
+    sabitSes() { const s = this.secim(); return s === 'karisik' ? null : this.iyiSesler().find((v) => v.name === s) || null; },
+    ozet(metin) { let h = 0; for (const c of String(metin)) h = (h * 31 + c.codePointAt(0)) >>> 0; return h; },
+    sesFor(metin) {
+      const sabit = this.sabitSes(); if (sabit) return sabit;
+      const h = this.havuz(); return h.length ? h[this.ozet(this.temizle(metin)) % h.length] : null;
+    },
+    secili() { return this.sabitSes() || this.havuz()[0] || null; },
+    // Ayarlar'da karışık seçilince havuzdaki her ses kendini tanıtır
+    tanit() {
+      if (!this.aktif()) return;
+      speechSynthesis.cancel();
+      this.havuz().forEach((v) => {
+        const u = new SpeechSynthesisUtterance(`Hola, me llamo ${this.kisiAdi(v)}.`);
+        u.voice = v; u.lang = v.lang; u.rate = this.ayar().sesHiz || 0.9;
+        speechSynthesis.speak(u);
+      });
     },
 
     // "encantado / encantada" → "encantado"
@@ -55,7 +88,7 @@
     oku(metin, yavas) {
       if (!this.aktif() || !metin) return;
       const u = new SpeechSynthesisUtterance(this.temizle(metin));
-      const v = this.secili();
+      const v = this.sesFor(metin);
       if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'es-MX';
       const hiz = this.ayar().sesHiz || 0.9;
       u.rate = yavas ? Math.max(0.5, hiz - 0.35) : hiz;
@@ -64,15 +97,15 @@
     },
     dur() { if ('speechSynthesis' in window) speechSynthesis.cancel(); },
 
-    // 🎧 Sahne (uzun dinleme): satirlar = [['A', 'metin'], ['B', 'metin']…]. A seçili sesle, B ikinci bir
-    // İspanyolca sesle okunur; ikinci ses yoksa aynı ses daha ince tonla. Satırlar sırayla kuyruğa girer.
+    // 🎧 Sahne (uzun dinleme): satirlar = [['A', 'metin'], ['B', 'metin']…]. A ve B iki farklı sesle okunur
+    // (karışıkta sahneye göre değişir: bazen A Paulina B Carlos, bazen tersi); ikinci ses yoksa aynı ses daha ince tonla.
     ikinciSes(birinci) {
-      const adaylar = this.sesler.filter((v) => v !== birinci);
+      const adaylar = [...this.havuz(), ...this.iyiSesler()].filter((v) => v !== birinci);
       return adaylar.find((v) => LATAM.test(v.lang)) || adaylar[0] || null;
     },
     sahneOku(satirlar, yavas) {
       if (!this.aktif() || !satirlar || !satirlar.length) return;
-      const v1 = this.secili(), v2 = this.ikinciSes(v1);
+      const v1 = this.sesFor(satirlar.map((s) => s[1]).join(' ')), v2 = this.ikinciSes(v1);
       const hiz = this.ayar().sesHiz || 0.9;
       speechSynthesis.cancel();
       satirlar.forEach(([kim, metin]) => {

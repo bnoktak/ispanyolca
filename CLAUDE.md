@@ -29,7 +29,7 @@ js/puan.js            cevap günlüğü, 1-2-3 zorluk, zorluk raporu, TUR_ADI (s
 js/alistirmalar.js    soru türleri, ünite alıştırması / sınav / tekrar oturumu üreticileri
 js/uretici.js         şablon cümleler, birikimli çekim, cümlede çekim, ser/estar, çeviri, doğru/yanlış
 js/app.js             ekranlar (ana ekran, ünite, kartlar, alıştırma, sınav, özet tablolar, ayarlar)
-js/ses.js             Web Speech API ile İspanyolca okuma
+js/ses.js             Web Speech API ile İspanyolca okuma: iPhone robot sesleri (Eddy, Flo, Grandma…) elenir, "Gelişmiş" sürüm seçilir; 🎲 karışık (varsayılan): Paulina (MX) + Carlos (CO), aynı metin hep aynı ses, sahnede A/B farklı; seçim Cihaz 'sesSecim'
 js/ai.js              yapay zekâ modülü (kapalı)
 js/senkron.js         ☁️ senkron: gizli GitHub Gist sürücüsü + birleştirme (kelime: en son cevaplanan, ünite: VEYA, puan: birleşim, sifirlama işareti); anahtar yalnızca Cihaz'da
 js/widget.js          öğrenilen kelimeler + kilide uygun örnek cümle (mini kart ve widget ortak), widget.json üretimi, Scriptable yükleyici kodu
