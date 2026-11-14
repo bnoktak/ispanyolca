@@ -308,7 +308,8 @@
     const z = x.zamir ? `<span class="bc-zamir ${k}">${esc(x.zamir)}</span> ` : '';
     if (x.duz !== undefined) return z + esc(x.duz);
     if (x.duzensiz) return z + `<span class="bc-duzensiz ${k}" title="düzensiz">${esc(x.duzensiz)}</span>`;
-    const kok = x.degisen !== undefined ? `${esc(x.kokOn)}<mark class="bc-degisen">${esc(x.degisen)}</mark>${esc(x.kokSon)}` : esc(x.kok);
+    // kökte değişen ünlü (qu·ie·r) ayrıca vurgulanmaz (kullanıcı isteği); kök düz yazılır
+    const kok = x.degisen !== undefined ? esc(x.kokOn + x.degisen + x.kokSon) : esc(x.kok);
     return z + `<span class="bc">${kok}<span class="bc-ek ${k}">${esc(x.ek)}</span></span>`;
   }
   // "el padre" → artikel renkli (el / los mavi, la / las kırmızı)

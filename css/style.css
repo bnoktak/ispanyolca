@@ -458,7 +458,6 @@ body.telefon .puanla button { flex: 1; min-height: 46px; font-size: 16px; font-w
 .bc { color: var(--yazi); font-weight: 600; }
 .bc-ek { font-weight: 800; }
 .bc-ek::before { content: '·'; color: var(--soluk); font-weight: 400; margin: 0 1px; }
-.bc-degisen { background: rgba(255, 213, 79, .2); color: #ffd54f; font-weight: 800; border-radius: 4px; padding: 0 1px; }
 .bc-duzensiz { font-weight: 800; border-bottom: 2px dotted currentColor; }
 .bc-duzensiz::after { content: '⚡'; font-size: .7em; margin-left: 2px; }
 .bc-zamir { font-weight: 700; }

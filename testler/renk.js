@@ -39,7 +39,7 @@ async function git(o, url) { await gonder('Page.navigate', { url }, o); for (let
     const t = await d(o, `JSON.stringify({ ek: document.querySelectorAll('.kisi-tablo .bc-ek').length, degisen: document.querySelectorAll('.kisi-tablo .bc-degisen').length, duzensiz: document.querySelectorAll('.kisi-tablo .bc-duzensiz').length,
       okunur: [...document.querySelectorAll('.kisi-tablo td.fiil .oku')].slice(0, 3).map((s) => s.dataset.ses), sahip: [...document.querySelectorAll('.kisi-tablo .k-yo')].map((s) => s.textContent).slice(0, 6), aciklama: !!document.querySelector('.renk-aciklama') })`);
     const tj = JSON.parse(t);
-    sonuc('kişi tablosu: ekler, değişen harfler ve düzensizler renkli; açıklama var', tj.ek > 150 && tj.degisen > 30 && tj.duzensiz === 13 && tj.aciklama, t.slice(0, 160));
+    sonuc('kişi tablosu: ekler ve düzensizler renkli, değişen harf vurgusu yok; açıklama var', tj.ek > 150 && tj.degisen === 0 && tj.duzensiz === 13 && tj.aciklama, t.slice(0, 160));
     sonuc('dinlemek için okunan metin değişmedi (renk okumayı bozmuyor)', tj.okunur.every((x) => !/[<·]/.test(x)), tj.okunur.join(', '));
     const g = await d(o, `JSON.stringify([...document.querySelectorAll('.kisi-tablo tr')].slice(2, 3).map((tr) => tr.innerHTML.match(/gusta|k-yo">me</g)))`);
     sonuc('gustar sütununda yalnızca değişen kelime (me / te…) renkli, "gusta" sade', /k-yo\\">me</.test(g) || /k-yo">me</.test(g), g.slice(0, 120));

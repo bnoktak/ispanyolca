@@ -607,7 +607,7 @@
       let ic = `<b>${s.dogru ? (s.uyari ? 'Neredeyse!' : 'Doğru! 🎉') : 'Yanlış'}</b>`;
       if (s.mesaj) ic += `<p>${esc(s.mesaj)}</p>`;
       if (s.metin) ic += `<p class="detay-metin">🎧 ${esc(s.metin)}${s.metinTr ? `<br><i>${esc(s.metinTr)}</i>` : ''}</p>`;
-      // 🎨 çekim sorularında doğru biçim renkli: kök · ek, değişen ünlü, düzensiz
+      // 🎨 çekim sorularında doğru biçim renkli: kök · ek, düzensiz
       if (s.bicim) ic += `<p class="bicim-satir">🔧 ${esc(s.bicim.fiil)} → ${Alistirma.bicimHtml(s.bicim.fiil, s.bicim.bicim, s.bicim.kisi)}</p>`;
       if (s.uyari) ic += `<p>${esc(s.uyari)} <b>${esc(s.dogrusu)}</b></p>`;
       else if (!s.dogru && s.dogrusu) ic += `<p>Doğrusu: <b>${esc(s.dogrusu)}</b></p>`;
@@ -993,7 +993,6 @@
     const fiilHucreHtml = (f, k) => (f[k] ? okuHtml(f[k], () => Alistirma.bicimHtml(f.fiil, f[k], k)) : '–');
     const renkAciklama = `<p class="renk-aciklama">
         <span><span class="bc">habl<span class="bc-ek k-yo">o</span></span> kök · ek</span>
-        <span><span class="bc">qu<mark class="bc-degisen">ie</mark>r<span class="bc-ek k-yo">o</span></span> değişen</span>
         <span><span class="bc-duzensiz k-yo">soy</span> düzensiz</span>
         <span class="kisi-renkler">${[['yo', 'yo'], ['tu', 'tú'], ['el', 'él'], ['nos', 'nos.'], ['ellos', 'ellos']].map(([k, a]) => `<b class="k-${k}">${a}</b>`).join(' ')}</span></p>`;
     const hucre = (c, x) => { const v = c[x.k]; if (!v || !acikMi(v[1])) return '<td class="bos">–</td>'; return c.tr ? `<td class="tr">${satirli(v[0])}</td>` : `<td class="es">${grupHucreHtml(c, x)}</td>`; };
