@@ -72,10 +72,10 @@ const durum = `JSON.stringify({ sekme: (document.querySelector('.ozet-sekmeler .
 
     await d(o, seed(27)); await bekle(600); await ozetAc(o, 'gruplar');
     const c = JSON.parse(await d(o, `JSON.stringify({ cins: document.querySelectorAll('.tema-cins').length,
-      yanlis: [...document.querySelectorAll('.tema-cins tr')].flatMap((r) => { const t = r.querySelectorAll('td .oku, td'); const td = r.querySelectorAll('td'); return td.length ? [[(td[0].querySelector('.oku') || td[0]).textContent, 'e'], [(td[1].querySelector('.oku') || td[1]).textContent, 'd']] : []; })
+      yanlis: [...document.querySelectorAll('.tema-cins')].filter((t) => t.querySelector('th')).flatMap((t) => [...t.querySelectorAll('tr')]).flatMap((r) => { const t = r.querySelectorAll('td .oku, td'); const td = r.querySelectorAll('td'); return td.length ? [[(td[0].querySelector('.oku') || td[0]).textContent, 'e'], [(td[1].querySelector('.oku') || td[1]).textContent, 'd']] : []; })
         .map(([s, g]) => [s.replace(/^[^a-záéíóúñ¿¡]+/i, ''), g]).filter(([s, g]) => s && (g === 'e' ? !/^(el|los) /i.test(s) : !/^(la|las) /i.test(s))).slice(0, 5),
-      etiket: document.querySelectorAll('#tm-yemek td:nth-child(3)').length })`));
-    sonuc('liste temaları eril/dişil sütunlu, yanlış sütun yok, ünite etiketi yok', c.cins >= 5 && c.yanlis.length === 0 && c.etiket === 0, JSON.stringify(c));
+      etiket: document.querySelectorAll('#tm-yemek td:nth-child(3)').length, sagda: document.querySelectorAll('.tema-liste .tema-liste, section.tema-liste table.tema-liste').length })`));
+    sonuc('liste temaları eril/dişil sütunlu, yanlış sütun yok, ünite etiketi yok, Türkçe hep altta', c.cins >= 5 && c.yanlis.length === 0 && c.etiket === 0 && c.sagda === 0, JSON.stringify(c));
     await d(o, `(document.querySelector('[data-bolum="tm-yemek"]').click(), true)`); await bekle(900); await ekran(o, 'cins-yemek-390');
     await gonder('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, o);
     await d(o, `(document.querySelector('[data-bolum="tm-vucut"]').click(), true)`); await bekle(900); await ekran(o, 'cins-vucut-genis');

@@ -1122,17 +1122,18 @@
         const simgeli = (x) => esHucre(x, t.simge && t.simge[x.id] ? `<span class="simge">${t.simge[x.id]}</span> ` : '');
         const liste = t.bicim === 'liste';
         const tekTablo = (k) => `<table class="ozet-tablo tema-liste">${k.map((x) =>
-          `<tr><td class="es">${simgeli(x)}</td><td class="tr">${esc(x.tr)}</td>${liste ? '' : `<td>${uniteEtiket(x.unite)}</td>`}</tr>`).join('')}</table>`;
-        // liste: artikelli kelimeler iki sütunda, ♂ el / los solda, ♀ la / las sağda; artikelsizler altta tek sütun
-        const cinsTablo = (er, di) => { const n = Math.max(er.length, di.length), h = (x) => (x ? `<td class="es">${simgeli(x)}<small>${esc(x.tr)}</small></td>` : '<td></td>');
-          return `<table class="ozet-tablo tema-cins"><tr><th class="art-e">♂ el</th><th class="art-d">♀ la</th></tr>${Array.from({ length: n }, (_, i) => `<tr>${h(er[i])}${h(di[i])}</tr>`).join('')}</table>`; };
+          `<tr><td class="es">${simgeli(x)}</td><td class="tr">${esc(x.tr)}</td><td>${uniteEtiket(x.unite)}</td></tr>`).join('')}</table>`;
+        // liste: her yerde aynı görünüm, Türkçe kelimenin altında. Artikelli kelimeler ♂ el / los solda, ♀ la / las sağda
+        // (bölümde tek cins varsa öbür sütun boş kalır); artikelsizler altta iki sütuna yayılır
+        const hucreAlt = (x) => (x ? `<td class="es">${simgeli(x)}<small>${esc(x.tr)}</small></td>` : '<td></td>');
+        const cinsTablo = (er, di) => `<table class="ozet-tablo tema-cins"><tr><th class="art-e">♂ el</th><th class="art-d">♀ la</th></tr>${Array.from({ length: Math.max(er.length, di.length) }, (_, i) => `<tr>${hucreAlt(er[i])}${hucreAlt(di[i])}</tr>`).join('')}</table>`;
+        const yayTablo = (k) => `<table class="ozet-tablo tema-cins">${Array.from({ length: Math.ceil(k.length / 2) }, (_, i) => `<tr>${hucreAlt(k[2 * i])}${hucreAlt(k[2 * i + 1])}</tr>`).join('')}</table>`;
         ic = bol.map((b) => { const k = b.k.filter(acik); if (!k.length) return '';
           const bas = b.ad ? `<h5>${esc(b.ad)}</h5>` : '';
           if (!liste) return bas + tekTablo(k);
           const er = k.filter((x) => /^(el|los) /i.test(x.es)), di = k.filter((x) => /^(la|las) /i.test(x.es)), tek = k.filter((x) => !er.includes(x) && !di.includes(x));
           // bölümde tek cins varsa (ör. içecekler hep "el") boş sütun olmasın: düz liste
-          if (!er.length || !di.length) return bas + tekTablo(k);
-          return bas + cinsTablo(er, di) + (tek.length ? tekTablo(tek) : ''); }).join('');
+          return bas + (er.length + di.length ? cinsTablo(er, di) : '') + (tek.length ? yayTablo(tek) : ''); }).join('');
         const orn = (t.ornekler || []).filter((o) => acikMi(o[2]));
         if (orn.length) ic += `<h5>Örnekler</h5><table class="ozet-tablo tema-saat">${orn.map((o) => `<tr><td class="saat-rakam">${esc(o[0])}</td><td class="es">${sesli(o[1])}</td></tr>`).join('')}</table>`;
       }
