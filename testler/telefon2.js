@@ -72,6 +72,22 @@ const tikla = (sec) => `(() => { const b = document.querySelector(${JSON.stringi
         await ekran(o, `${tel ? 'tel' : 'pc'}-geribildirim`);
       } else sonuc(`${etiket}: şıklı soru bulunamadı`, false);
 
+      // doğru cevapta da anlam görünüyor ("picante = acı"): şık sorularında ilk şıkka basa basa bir doğruya denk gelinir
+      if (!tel) {
+        let goruldu = null;
+        for (let i = 0; i < 60 && !goruldu; i++) {
+          // alıştırma menüsüne dön (gerekirse ünite ekranından)
+          for (let j = 0; j < 3 && !(await d(o, `!!document.querySelector('[data-mod="karisik"]')`)); j++) { await d(o, tikla('.geri')); await bekle(250); await d(o, tikla('[data-adim="alistirma"]')) || await d(o, tikla('[data-unite="u07"]')); await bekle(250); }
+          await d(o, tikla('[data-mod="karisik"]')); await bekle(350);
+          if (!(await d(o, `!!document.querySelector('.alistirma > .siklar .sik')`))) continue;
+          await d(o, tikla('.alistirma .sik')); await bekle(400);
+          const r = JSON.parse(await d(o, `JSON.stringify({ dogru: document.querySelector('.geribildirim').classList.contains('dogru'), anlam: (document.querySelector('.geribildirim .dogru-anlam') || {}).textContent || '' })`));
+          if (r.dogru && r.anlam) goruldu = r.anlam;
+        }
+        sonuc('doğru cevapta da "İspanyolca = Türkçe" satırı görünüyor', !!goruldu, goruldu || 'denk gelmedi');
+        if (goruldu) await ekran(o, 'pc-dogru-anlam');
+      }
+
       // eşleştirme çift sayısı
       const es = await d(o, `(() => { const u = ICERIK.bul('u07'); const a = document.createElement('div'); document.body.appendChild(a);
         Alistirma._sifirla && Alistirma._sifirla(); const s1 = Alistirma.uniteden(u, 'eslestir'); s1.render(a, () => {}); const n1 = a.querySelectorAll('.kart-k').length / 2;

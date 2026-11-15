@@ -611,6 +611,8 @@
       if (s.bicim) ic += `<p class="bicim-satir">🔧 ${esc(s.bicim.fiil)} → ${Alistirma.bicimHtml(s.bicim.fiil, s.bicim.bicim, s.bicim.kisi)}</p>`;
       if (s.uyari) ic += `<p>${esc(s.uyari)} <b>${esc(s.dogrusu)}</b></p>`;
       else if (!s.dogru && s.dogrusu) ic += `<p>Doğrusu: <b>${esc(s.dogrusu)}</b></p>`;
+      // doğru cevapta da anlamı göster ("picante = acı"), yalnızca İspanyolca = Türkçe biçimli cevaplarda
+      else if (s.dogru && / = /.test(s.dogrusu || '')) ic += `<p class="dogru-anlam">${esc(s.dogrusu)}</p>`;
       if (s.ipucu && !s.dogru) ic += `<p class="ipucu">💡 ${esc(s.ipucu)}</p>`;
       if (s.oku && Ses.otoOku()) {
         Ses.oku(s.oku);
