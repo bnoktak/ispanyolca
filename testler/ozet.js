@@ -63,6 +63,12 @@ const durum = `JSON.stringify({ sekme: (document.querySelector('.ozet-sekmeler .
       gustar: !!document.querySelector('#oz-gustar, [id*="gustar"]'), etiket: [...document.querySelectorAll('.ozet-etiketler button')].map((b) => b.textContent),
       oku: document.querySelector('#oz-fiil td.sc .oku') ? document.querySelector('#oz-fiil td.sc .oku').dataset.ses : null })`));
     sonuc('Dilbilgisi: ek ve kalıp tabloları, cümleler renkli', g.ekler && g.kalip && g.ekHucre >= 15 && g.sahipRenk === g.sahipSatir, JSON.stringify(g));
+    const sq = JSON.parse(await d(o, `(() => { const b = document.getElementById('oz-sorular'); const onceki = b && b.previousElementSibling;
+      return JSON.stringify({ var: !!b, satir: b ? b.querySelectorAll('tr').length : 0, grup: b ? [...b.querySelectorAll('h5')].map((h) => h.textContent) : [],
+        sonra: onceki ? onceki.querySelector('h3').textContent : '', tekrar: b ? [...b.querySelectorAll('td.es')].filter((t) => /^¿(qué|dónde|cómo|quién)\?$/i.test(t.textContent.trim())).length : -1,
+        etiket: !!document.querySelector('[data-bolum="oz-sorular"]') }); })()`));
+    sonuc('Soru kalıpları: Soru kelimelerinin altında, gruplu, tek kelimelik sorular tekrar yok', sq.var && sq.satir >= 45 && sq.grup.length >= 6 && /Soru kelimeleri/.test(sq.sonra) && sq.tekrar === 0 && sq.etiket, JSON.stringify(sq));
+    await d(o, `(document.querySelector('[data-bolum="oz-sorular"]').click(), true)`); await bekle(800); await ekran(o, 'db-sorular-390');
     await gonder('Emulation.setDeviceMetricsOverride', { width: 390, height: 900, deviceScaleFactor: 1, mobile: true }, o);
     for (const b of ['oz-ekler', 'oz-kalip', 'oz-sahip', 'oz-fiil']) { await d(o, `(document.querySelector('[data-bolum="${b}"]').click(), true)`); await bekle(800); await ekran(o, 'db-' + b); }
     await gonder('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, o);

@@ -972,6 +972,36 @@
         ${satirlar.map((s) => `<tr>${s.slice(0, -1).map((c, i) => `<td class="${esMi(i) ? 'es' : ''}">${esMi(i) ? sesli(c) : satirli(c)}</td>`).join('')}${orn ? scHucre(ornek(orn[s[0]])) : ''}<td>${uniteEtiket(s.at(-1))}</td></tr>`).join('')}
       </table></div>${t.not ? `<p class="aciklama tablo-not">💡 ${esc(t.not)}</p>` : ''}${kalanNot(t.satirlar.map((s) => s.at(-1)), 'satır')}</section>` };
     });
+    // 1b) 💬 SORU KALIPLARI: ünitelerdeki soru kelimelerinden (¿…?) kendiliğinden toplanır, soru kelimesine göre gruplu.
+    // Üstteki "Soru kelimeleri" tablosunda zaten olan tek kelimelik sorular (¿qué?, ¿dónde?…) tekrar edilmez.
+    const soruTablosu = (ICERIK.ozet || []).find((t) => t.ornek === 'soru');
+    const nSoru = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[¿?¡!.,…]/g, '').trim();
+    const tabloSorulari = new Set((soruTablosu ? soruTablosu.satirlar : []).flatMap((s) => String(s[0]).split(/\n| \/ /).map(nSoru)));
+    const SORU_GRUPLARI = [
+      ['¿Qué…?', (q) => /^que\b/.test(q)], ['¿Cómo…?', (q) => /^como\b/.test(q)], ['¿Dónde…?', (q) => /^(de )?donde\b/.test(q)],
+      ['¿Cuánto…? · ¿Cuál…?', (q) => /^cu(a|á)nt|^cual\b/.test(q)], ['¿Cuándo…?', (q) => /^(desde )?cuando\b/.test(q)],
+      ['¿A qué…?', (q) => /^a que\b/.test(q)], ['¿Quién…?', (q) => /^quien\b/.test(q)],
+      ['🙏 Rica ve izin', (q) => /^(me|se|nos lo|te lo) /.test(q)], ['💬 Kısa sorular', (q) => /^(y |algo mas)/.test(q)],
+      ['✅ Evet / hayır soruları', () => true]
+    ];
+    const soruKaliplari = ICERIK.uniteler.flatMap((u) => u.kelimeler.filter((k) => /[¿?]/.test(k.es)).map((k) => ({ k, q: nSoru(k.es.split(' / ')[0]) })))
+      .filter(({ q }) => !(q.split(' ').length === 1 && tabloSorulari.has(q)));
+    const soruKalipTablo = (() => {
+      const id = 'oz-sorular', baslik = '💬 Soru kalıpları', uidler = soruKaliplari.map((x) => x.k.unite);
+      const acik = soruKaliplari.filter((x) => acikMi(x.k.unite));
+      if (!acik.length) return { id, ad: baslik, kilitli: true, html: kilitKart(id, baslik, uidler, uidler.length, 'kalıp') };
+      const gruplu = SORU_GRUPLARI.map(([ad]) => ({ ad, x: [] }));
+      acik.forEach((x) => gruplu[SORU_GRUPLARI.findIndex(([, fn]) => fn(x.q))].x.push(x));
+      return { id, ad: baslik, html: `<section class="kutu ozet-kutu" id="${id}"><h3>${baslik}</h3>
+        <p class="aciklama">Ünitelerde karşılaştığın sorular, soru kelimesine göre. Yeni ünite açıldıkça kendiliğinden eklenir. Tıklayınca okunur.</p>
+        ${gruplu.filter((g) => g.x.length).map((g) => `<h5>${esc(g.ad)}</h5><table class="ozet-tablo soru-kalip">${g.x.map(({ k }) =>
+          `<tr><td class="es">${Ses.okunurMu(k) ? sesli(k.es) : esc(k.es)}</td><td class="tr">${esc(k.tr)}</td><td>${uniteEtiket(k.unite)}</td></tr>`).join('')}</table>`).join('')}
+        ${kalanNot(uidler, 'kalıp')}</section>` };
+    })();
+    {   // "Soru kelimeleri"nin hemen altına
+      const i = soruTablosu ? (ICERIK.ozet || []).indexOf(soruTablosu) : -1;
+      if (i >= 0) tablolar.splice(i + 1, 0, soruKalipTablo); else tablolar.push(soruKalipTablo);
+    }
     // 2) KİŞİ TABLOSU: her satır bir kişi; zamir + sahiplik + gustar + dönüşlü + tüm fiil çekimleri yan yana
     const KT = ICERIK.kisiTablosu;
     const kisiler = KT.kisiler.filter((x) => acikMi(x.uid));
