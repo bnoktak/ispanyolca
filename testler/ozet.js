@@ -69,6 +69,13 @@ const durum = `JSON.stringify({ sekme: (document.querySelector('.ozet-sekmeler .
         etiket: !!document.querySelector('[data-bolum="oz-sorular"]') }); })()`));
     sonuc('Soru kalıpları: Soru kelimelerinin altında, gruplu, tek kelimelik sorular tekrar yok', sq.var && sq.satir >= 45 && sq.grup.length >= 6 && /Soru kelimeleri/.test(sq.sonra) && sq.tekrar === 0 && sq.etiket, JSON.stringify(sq));
     await d(o, `(document.querySelector('[data-bolum="oz-sorular"]').click(), true)`); await bekle(800); await ekran(o, 'db-sorular-390');
+    const hiza = await d(o, `JSON.stringify([...new Set([...document.querySelectorAll('#oz-sorular table')].map((t) => Math.round(t.querySelector('td.tr').getBoundingClientRect().left)))])`);
+    sonuc('Soru kalıpları: gruplar arasında Türkçe sütunu hizalı (390 px)', JSON.parse(hiza).length === 1, hiza);
+    await gonder('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, o);
+    await d(o, `(document.querySelector('[data-bolum="oz-sorular"]').click(), true)`); await bekle(800); await ekran(o, 'db-sorular-genis');
+    const hiza2 = await d(o, `JSON.stringify([...new Set([...document.querySelectorAll('#oz-sorular table')].map((t) => Math.round(t.querySelector('td.tr').getBoundingClientRect().left)))])`);
+    sonuc('Soru kalıpları: gruplar arasında Türkçe sütunu hizalı (geniş)', JSON.parse(hiza2).length === 1, hiza2);
+    await gonder('Emulation.setDeviceMetricsOverride', { width: 390, height: 900, deviceScaleFactor: 1, mobile: true }, o);
     await gonder('Emulation.setDeviceMetricsOverride', { width: 390, height: 900, deviceScaleFactor: 1, mobile: true }, o);
     for (const b of ['oz-ekler', 'oz-kalip', 'oz-sahip', 'oz-fiil']) { await d(o, `(document.querySelector('[data-bolum="${b}"]').click(), true)`); await bekle(800); await ekran(o, 'db-' + b); }
     await gonder('Emulation.setDeviceMetricsOverride', { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, o);
